@@ -45,8 +45,8 @@ const MAX_MOODS = 6;
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors, themeMode, setTheme } = useTheme();
-  const { preferences, updatePreferences, setPremium } = useUser();
-  const { restorePurchases, isRestoring, manageSubscription, willRenew, expirationDate } = usePurchases();
+  const { preferences, updatePreferences } = useUser();
+  const { isPremium, restorePurchases, isRestoring, manageSubscription, willRenew, expirationDate } = usePurchases();
   const { isLoggedIn, user, signOut } = useAuth();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showMoodsModal, setShowMoodsModal] = useState(false);
@@ -236,15 +236,15 @@ export default function SettingsScreen() {
                 <View style={styles.subscriptionInfo}>
                   <Crown
                     size={24}
-                    color={preferences.isPremium ? colors.accent : colors.textMuted}
+                    color={isPremium ? colors.accent : colors.textMuted}
                     strokeWidth={1.5}
                   />
                   <View style={styles.subscriptionText}>
                     <Text style={[styles.subscriptionLabel, { color: colors.primary }]}>
-                      {preferences.isPremium ? 'PoemCloud+' : 'Free Plan'}
+                      {isPremium ? 'PoemCloud+' : 'Free Plan'}
                     </Text>
                     <Text style={[styles.subscriptionValue, { color: colors.textMuted }]}>
-                      {preferences.isPremium 
+                      {isPremium 
                         ? 'All features unlocked'
                         : 'Limited features'
                       }
@@ -253,7 +253,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
               
-              {!preferences.isPremium && (
+              {!isPremium && (
                 <TouchableOpacity
                   style={[styles.upgradeButton, { backgroundColor: colors.accent }]}
                   onPress={() => { triggerHaptic('medium'); setShowPremiumModal(true); }}
@@ -264,7 +264,7 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               )}
 
-              {preferences.isPremium && (
+              {isPremium && (
                 <TouchableOpacity 
                   style={styles.manageButton}
                   onPress={manageSubscription}
@@ -405,7 +405,6 @@ export default function SettingsScreen() {
         visible={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
         onSubscribe={() => {
-          setPremium(true);
           setShowPremiumModal(false);
         }}
       />

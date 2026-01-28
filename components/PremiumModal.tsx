@@ -36,6 +36,7 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
     isRestoring,
     showSuccessModal,
     hideSuccessModal,
+    isPremium,
   } = usePurchases();
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
   const slideAnim = useRef(new Animated.Value(300)).current;
@@ -70,7 +71,15 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
         }),
       ]).start();
     }
-  }, [visible]);
+  }, [visible, slideAnim, fadeAnim]);
+
+  useEffect(() => {
+    if (isPremium && visible && !showSuccessModal) {
+      console.log('[PremiumModal] User became premium, closing modal');
+      onSubscribe();
+      onClose();
+    }
+  }, [isPremium, visible, showSuccessModal, onSubscribe, onClose]);
 
   const features = [
     'Listen to poems with audio narrations',
@@ -104,7 +113,7 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
     try {
       console.log('[PremiumModal] Starting purchase...');
       await purchasePackage(selectedPackage);
-      console.log('[PremiumModal] Purchase successful');
+      console.log('[PremiumModal] Purchase flow completed');
       triggerHaptic('success');
     } catch (error: any) {
       console.log('[PremiumModal] Purchase error:', error);
@@ -118,18 +127,24 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
   };
 
   const handleSuccessComplete = () => {
+    console.log('[PremiumModal] Success animation complete');
     hideSuccessModal();
     onSubscribe();
     onClose();
   };
 
   const handleRestore = async () => {
+    triggerHaptic('light');
     try {
       await restorePurchases();
-      onClose();
     } catch {
       console.log('[PremiumModal] Restore failed');
     }
+  };
+
+  const handleClose = () => {
+    triggerHaptic('light');
+    onClose();
   };
 
   return (
@@ -137,9 +152,9 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
       visible={visible}
       transparent
       animationType="none"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={styles.overlay} onPress={handleClose}>
         <Animated.View style={[styles.overlayBg, { opacity: fadeAnim }]} />
       </Pressable>
       
@@ -151,7 +166,7 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
       >
         <View style={[styles.handle, { backgroundColor: colors.border }]} />
         
-        <TouchableOpacity style={styles.closeButton} onPress={() => { triggerHaptic('light'); onClose(); }}>
+        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
           <X size={24} color={colors.textMuted} />
         </TouchableOpacity>
 
@@ -258,10 +273,10 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
 
         <TouchableOpacity 
           style={styles.laterButton} 
-          onPress={onClose}
+          onPress={handleClose}
           disabled={isPurchasing || isRestoring}
         >
-          <Text style={[styles.laterButtonText, { color: colors.text }]}>Maybe later</Text>
+          <Text style={[styles.laterButtonText, { color: colors.text }]}>Continue with Free</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 

@@ -28,6 +28,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
+import { usePurchases } from '@/contexts/PurchasesContext';
 import { getPoemById } from '@/mocks/poems';
 
 import PremiumModal from '@/components/PremiumModal';
@@ -54,7 +55,8 @@ export default function PoemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors } = useTheme();
-  const { preferences, isLiked, isBookmarked, toggleLike, toggleBookmark, setPremium, markAsRead } = useUser();
+  const { isLiked, isBookmarked, toggleLike, toggleBookmark, markAsRead } = useUser();
+  const { isPremium } = usePurchases();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeature, setPremiumFeature] = useState<string>();
   const [showTranslation, setShowTranslation] = useState(false);
@@ -129,14 +131,14 @@ export default function PoemDetailScreen() {
   };
 
   const handlePremiumAction = (feature: string) => {
-    if (!preferences.isPremium) {
+    if (!isPremium) {
       setPremiumFeature(feature);
       setShowPremiumModal(true);
     }
   };
 
   const handleTranslate = () => {
-    if (!preferences.isPremium) {
+    if (!isPremium) {
       handlePremiumAction('Translations');
       return;
     }
@@ -175,7 +177,7 @@ export default function PoemDetailScreen() {
   };
 
   const handleListen = () => {
-    if (!preferences.isPremium) {
+    if (!isPremium) {
       setShowListenModal(true);
       return;
     }
@@ -211,8 +213,8 @@ export default function PoemDetailScreen() {
               style={[styles.actionButton, { backgroundColor: colors.surface }]}
               onPress={handleTranslate}
             >
-              <Languages size={20} color={preferences.isPremium ? colors.primary : colors.accent} strokeWidth={1.5} />
-              {!preferences.isPremium && <Crown size={10} color={colors.accent} style={styles.crownBadge} />}
+              <Languages size={20} color={isPremium ? colors.primary : colors.accent} strokeWidth={1.5} />
+              {!isPremium && <Crown size={10} color={colors.accent} style={styles.crownBadge} />}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, { backgroundColor: colors.surface }]}
@@ -222,8 +224,8 @@ export default function PoemDetailScreen() {
                 <Pause size={20} color={colors.accent} strokeWidth={1.5} />
               ) : (
                 <>
-                  <Headphones size={20} color={preferences.isPremium ? colors.primary : colors.accent} strokeWidth={1.5} />
-                  {!preferences.isPremium && <Crown size={10} color={colors.accent} style={styles.crownBadge} />}
+                  <Headphones size={20} color={isPremium ? colors.primary : colors.accent} strokeWidth={1.5} />
+                  {!isPremium && <Crown size={10} color={colors.accent} style={styles.crownBadge} />}
                 </>
               )}
             </TouchableOpacity>
@@ -364,7 +366,6 @@ export default function PoemDetailScreen() {
         visible={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
         onSubscribe={() => {
-          setPremium(true);
           setShowPremiumModal(false);
         }}
         feature={premiumFeature}

@@ -14,6 +14,7 @@ import { Search, Heart, Bookmark, Share2, Headphones, Crown, Cloud, TrendingUp, 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
+import { usePurchases } from '@/contexts/PurchasesContext';
 import { poems, getTodaysPoem, getPoemsByMood } from '@/mocks/poems';
 import { Poem, Mood } from '@/types';
 import Onboarding from '@/components/Onboarding';
@@ -27,7 +28,8 @@ import { useTTS } from '@/contexts/TTSContext';
 export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { preferences, completeOnboarding, isLiked, isBookmarked, toggleLike, toggleBookmark, setPremium } = useUser();
+  const { preferences, completeOnboarding, isLiked, isBookmarked, toggleLike, toggleBookmark } = useUser();
+  const { isPremium } = usePurchases();
   const { toggleSpeech, isSpeakingPoem, progress, getRemainingTime } = useTTS();
   const [refreshing, setRefreshing] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -53,9 +55,6 @@ export default function HomeScreen() {
     isPremium: boolean;
   }) => {
     completeOnboarding(prefs);
-    if (prefs.isPremium) {
-      setPremium(true);
-    }
   };
 
   const onRefresh = () => {
@@ -88,7 +87,7 @@ export default function HomeScreen() {
   };
 
   const handleListen = () => {
-    if (!preferences.isPremium) {
+    if (!isPremium) {
       setShowListenModal(true);
       return;
     }
@@ -200,8 +199,8 @@ export default function HomeScreen() {
                         <Pause size={22} color={colors.accent} strokeWidth={1.5} />
                       ) : (
                         <>
-                          <Headphones size={22} color={preferences.isPremium ? colors.textLight : colors.accent} strokeWidth={1.5} />
-                          {!preferences.isPremium && <Crown size={10} color={colors.accent} style={styles.crownBadge} />}
+                          <Headphones size={22} color={isPremium ? colors.textLight : colors.accent} strokeWidth={1.5} />
+                          {!isPremium && <Crown size={10} color={colors.accent} style={styles.crownBadge} />}
                         </>
                       )}
                     </View>
@@ -288,7 +287,6 @@ export default function HomeScreen() {
         visible={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
         onSubscribe={() => {
-          setPremium(true);
           setShowPremiumModal(false);
         }}
       />

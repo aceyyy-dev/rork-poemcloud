@@ -1,5 +1,5 @@
 import createContextHook from '@nkzw/create-context-hook';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Platform, Alert, Linking } from 'react-native';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import Purchases, { 
@@ -7,6 +7,8 @@ import Purchases, {
   CustomerInfo,
   LOG_LEVEL,
 } from 'react-native-purchases';
+
+const ENTITLEMENT_ID = 'premium';
 
 function getRCToken() {
   if (__DEV__ || Platform.OS === 'web') {
@@ -28,10 +30,14 @@ if (apiKey) {
   console.warn('[RevenueCat] No API key found');
 }
 
+type PurchaseResult = 'success' | 'cancelled' | 'error' | null;
+
 export const [PurchasesProvider, usePurchases] = createContextHook(() => {
   const queryClient = useQueryClient();
   const [isConfigured] = useState(!!apiKey);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [lastPurchaseResult, setLastPurchaseResult] = useState<PurchaseResult>(null);
+  const onSuccessCallbackRef = useRef<(() => void) | null>(null);
 
   const customerInfoQuery = useQuery({
     queryKey: ['customerInfo'],
@@ -39,7 +45,11 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       if (!isConfigured) return null;
       try {
         const info = await Purchases.getCustomerInfo();
-        console.log('[RevenueCat] Customer info fetched:', info.activeSubscriptions);
+        const isPremium = info.entitlements.active[ENTITLEMENT_ID] !== undefined;
+        console.log('[RevenueCat] Customer info fetched');
+        console.log('[RevenueCat] Entitlement ID:', ENTITLEMENT_ID);
+        console.log('[RevenueCat] isPremium:', isPremium);
+        console.log('[RevenueCat] Active subscriptions:', info.activeSubscriptions);
         return info;
       } catch (error) {
         console.error('[RevenueCat] Error fetching customer info:', error);
@@ -74,21 +84,27 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       return customerInfo;
     },
     onSuccess: (customerInfo) => {
+      const isPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
       console.log('[RevenueCat] Purchase successful');
+      console.log('[RevenueCat] Purchase result: success');
+      console.log('[RevenueCat] isPremium after purchase:', isPremium);
       queryClient.setQueryData(['customerInfo'], customerInfo);
-      const isPremium = customerInfo.entitlements.active['premium'] !== undefined;
+      setLastPurchaseResult('success');
       if (isPremium) {
         setShowSuccessModal(true);
       }
     },
     onError: (error: any) => {
       if (error?.userCancelled) {
-        console.log('[RevenueCat] Purchase cancelled by user');
+        console.log('[RevenueCat] Purchase result: cancelled');
+        setLastPurchaseResult('cancelled');
         return;
       }
       const errorMessage = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+      console.error('[RevenueCat] Purchase result: error');
       console.error('[RevenueCat] Purchase error:', errorMessage);
-      Alert.alert('Purchase Failed', errorMessage || 'An error occurred during purchase.');
+      setLastPurchaseResult('error');
+      Alert.alert('Purchase Failed', 'An error occurred during purchase. Please try again.');
     },
   });
 
@@ -99,9 +115,10 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       return customerInfo;
     },
     onSuccess: (customerInfo) => {
+      const isPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
       console.log('[RevenueCat] Restore successful');
+      console.log('[RevenueCat] isPremium after restore:', isPremium);
       queryClient.setQueryData(['customerInfo'], customerInfo);
-      const isPremium = customerInfo.entitlements.active['premium'] !== undefined;
       if (isPremium) {
         Alert.alert('Restored!', 'Your PoemCloud+ subscription has been restored.');
       } else {
@@ -118,7 +135,9 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
     if (!isConfigured) return;
 
     const listener = (info: CustomerInfo) => {
-      console.log('[RevenueCat] Customer info updated');
+      const isPremium = info.entitlements.active[ENTITLEMENT_ID] !== undefined;
+      console.log('[RevenueCat] Customer info updated via listener');
+      console.log('[RevenueCat] isPremium (listener):', isPremium);
       queryClient.setQueryData(['customerInfo'], info);
     };
 
@@ -128,10 +147,10 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
     };
   }, [isConfigured, queryClient]);
 
-  const isPremium = customerInfoQuery.data?.entitlements.active['premium'] !== undefined;
-  const willRenew = customerInfoQuery.data?.entitlements.active['premium']?.willRenew ?? false;
-  const expirationDate = customerInfoQuery.data?.entitlements.active['premium']?.expirationDate;
-  const productIdentifier = customerInfoQuery.data?.entitlements.active['premium']?.productIdentifier;
+  const isPremium = customerInfoQuery.data?.entitlements.active[ENTITLEMENT_ID] !== undefined;
+  const willRenew = customerInfoQuery.data?.entitlements.active[ENTITLEMENT_ID]?.willRenew ?? false;
+  const expirationDate = customerInfoQuery.data?.entitlements.active[ENTITLEMENT_ID]?.expirationDate;
+  const productIdentifier = customerInfoQuery.data?.entitlements.active[ENTITLEMENT_ID]?.productIdentifier;
 
   const currentOffering = offeringsQuery.data?.current;
 
@@ -144,12 +163,18 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
   );
 
   const purchasePackage = useCallback(async (pkg: PurchasesPackage) => {
+    setLastPurchaseResult(null);
     return purchaseMutation.mutateAsync(pkg);
-  }, [purchaseMutation.mutateAsync]);
+  }, [purchaseMutation]);
 
   const restorePurchases = useCallback(async () => {
     return restoreMutation.mutateAsync();
-  }, [restoreMutation.mutateAsync]);
+  }, [restoreMutation]);
+
+  const refreshEntitlement = useCallback(async () => {
+    console.log('[RevenueCat] Refreshing entitlement...');
+    await queryClient.invalidateQueries({ queryKey: ['customerInfo'] });
+  }, [queryClient]);
 
   const getMonthlyPrice = useCallback(() => {
     return monthlyPackage?.product.priceString || '$9.99';
@@ -176,6 +201,14 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
 
   const hideSuccessModal = useCallback(() => {
     setShowSuccessModal(false);
+    if (onSuccessCallbackRef.current) {
+      onSuccessCallbackRef.current();
+      onSuccessCallbackRef.current = null;
+    }
+  }, []);
+
+  const setOnSuccessCallback = useCallback((callback: () => void) => {
+    onSuccessCallbackRef.current = callback;
   }, []);
 
   return {
@@ -192,11 +225,15 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
     annualPackage,
     purchasePackage,
     restorePurchases,
+    refreshEntitlement,
     getMonthlyPrice,
     getAnnualPrice,
     manageSubscription,
     customerInfo: customerInfoQuery.data,
     showSuccessModal,
     hideSuccessModal,
+    setOnSuccessCallback,
+    lastPurchaseResult,
+    entitlementId: ENTITLEMENT_ID,
   };
 });

@@ -6,13 +6,14 @@ import {
   Modal,
   Animated,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Crown, Sparkles } from 'lucide-react-native';
+import { Check } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { triggerHaptic } from '@/utils/haptics';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface Props {
   visible: boolean;
@@ -22,182 +23,181 @@ interface Props {
 export default function SubscriptionSuccessModal({ visible, onComplete }: Props) {
   const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.5)).current;
-  const crownRotate = useRef(new Animated.Value(0)).current;
-  const sparkleAnimations = useRef([
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-  ]).current;
-  const animationsRef = useRef<Animated.CompositeAnimation[]>([]);
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const checkScale = useRef(new Animated.Value(0)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (visible) {
       triggerHaptic('success');
-      animationsRef.current = [];
 
-      const mainAnim = Animated.sequence([
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
+      fadeAnim.setValue(0);
+      scaleAnim.setValue(0.8);
+      checkScale.setValue(0);
+      glowAnim.setValue(0);
+
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 8,
+          tension: 60,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        Animated.sequence([
+          Animated.spring(checkScale, {
             toValue: 1,
-            duration: 300,
+            friction: 5,
+            tension: 80,
             useNativeDriver: true,
           }),
-          Animated.spring(scaleAnim, {
-            toValue: 1,
-            friction: 8,
-            tension: 40,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(crownRotate, {
-              toValue: 1,
-              duration: 2000,
-              useNativeDriver: true,
-            }),
-            Animated.timing(crownRotate, {
-              toValue: 0,
-              duration: 0,
-              useNativeDriver: true,
-            }),
-          ])
-        ),
-      ]);
-      mainAnim.start();
-      animationsRef.current.push(mainAnim);
-
-      sparkleAnimations.forEach((anim, index) => {
-        const sparkleAnim = Animated.loop(
-          Animated.sequence([
-            Animated.delay(index * 200),
-            Animated.timing(anim, {
-              toValue: 1,
-              duration: 1000,
-              useNativeDriver: true,
-            }),
-            Animated.timing(anim, {
-              toValue: 0,
-              duration: 1000,
-              useNativeDriver: true,
-            }),
-          ])
-        );
-        sparkleAnim.start();
-        animationsRef.current.push(sparkleAnim);
+          Animated.loop(
+            Animated.sequence([
+              Animated.timing(glowAnim, {
+                toValue: 1,
+                duration: 1200,
+                useNativeDriver: true,
+              }),
+              Animated.timing(glowAnim, {
+                toValue: 0,
+                duration: 1200,
+                useNativeDriver: true,
+              }),
+            ])
+          ),
+        ]).start();
       });
 
-      const timer = setTimeout(() => {
-        animationsRef.current.forEach(anim => anim.stop());
-        animationsRef.current = [];
-
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => {
-          fadeAnim.setValue(0);
-          scaleAnim.setValue(0.5);
-          crownRotate.setValue(0);
-          sparkleAnimations.forEach(anim => anim.setValue(0));
+      timerRef.current = setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 0.9,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
           onComplete();
         });
-      }, 2500);
+      }, 1800);
 
       return () => {
-        clearTimeout(timer);
-        animationsRef.current.forEach(anim => anim.stop());
-        animationsRef.current = [];
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+        }
       };
     } else {
       fadeAnim.setValue(0);
-      scaleAnim.setValue(0.5);
-      crownRotate.setValue(0);
-      sparkleAnimations.forEach(anim => anim.setValue(0));
+      scaleAnim.setValue(0.8);
+      checkScale.setValue(0);
+      glowAnim.setValue(0);
     }
-  }, [visible]);
+  }, [visible, fadeAnim, scaleAnim, checkScale, glowAnim, onComplete]);
 
   if (!visible) return null;
 
-  const crownSpin = crownRotate.interpolate({
+  const glowOpacity = glowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
+    outputRange: [0.3, 0.6],
   });
-
-  const sparklePositions = [
-    { top: height * 0.3, left: width * 0.2 },
-    { top: height * 0.35, right: width * 0.2 },
-    { top: height * 0.45, left: width * 0.15 },
-    { top: height * 0.45, right: width * 0.15 },
-    { top: height * 0.55, left: width * 0.25 },
-    { top: height * 0.55, right: width * 0.25 },
-  ];
 
   return (
     <Modal visible={visible} transparent animationType="none">
-      <BlurView intensity={80} style={styles.blur}>
-        <Animated.View
-          style={[
-            styles.container,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <View style={[styles.content, { backgroundColor: colors.surface }]}>
-            <Animated.View
-              style={[
-                styles.crownContainer,
-                {
-                  backgroundColor: colors.premiumLight,
-                  transform: [{ rotate: crownSpin }],
-                },
-              ]}
-            >
-              <Crown size={48} color={colors.accent} strokeWidth={1.5} />
-            </Animated.View>
-
-            <Text style={[styles.title, { color: colors.primary }]}>
-              Welcome to PoemCloud+
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textLight }]}>
-              All premium features unlocked
-            </Text>
-          </View>
-
-          {sparkleAnimations.map((anim, index) => {
-            const sparkleOpacity = anim.interpolate({
-              inputRange: [0, 0.5, 1],
-              outputRange: [0, 1, 0],
-            });
-            const sparkleScale = anim.interpolate({
-              inputRange: [0, 0.5, 1],
-              outputRange: [0.5, 1.2, 0.5],
-            });
-
-            return (
+      {Platform.OS === 'web' ? (
+        <View style={[styles.webBlur, { backgroundColor: 'rgba(0,0,0,0.4)' }]}>
+          <Animated.View
+            style={[
+              styles.container,
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <View style={[styles.content, { backgroundColor: colors.surface }]}>
               <Animated.View
-                key={index}
                 style={[
-                  styles.sparkle,
-                  sparklePositions[index],
+                  styles.glowRing,
                   {
-                    opacity: sparkleOpacity,
-                    transform: [{ scale: sparkleScale }],
+                    backgroundColor: colors.accent,
+                    opacity: glowOpacity,
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.checkContainer,
+                  {
+                    backgroundColor: colors.accent,
+                    transform: [{ scale: checkScale }],
                   },
                 ]}
               >
-                <Sparkles size={24} color={colors.accent} strokeWidth={2} />
+                <Check size={36} color="#FFFFFF" strokeWidth={3} />
               </Animated.View>
-            );
-          })}
-        </Animated.View>
-      </BlurView>
+
+              <Text style={[styles.title, { color: colors.primary }]}>
+                Welcome to PoemCloud+
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.textLight }]}>
+                Translations, listening, and unlimited{'\n'}saving are now unlocked.
+              </Text>
+            </View>
+          </Animated.View>
+        </View>
+      ) : (
+        <BlurView intensity={80} style={styles.blur}>
+          <Animated.View
+            style={[
+              styles.container,
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <View style={[styles.content, { backgroundColor: colors.surface }]}>
+              <Animated.View
+                style={[
+                  styles.glowRing,
+                  {
+                    backgroundColor: colors.accent,
+                    opacity: glowOpacity,
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.checkContainer,
+                  {
+                    backgroundColor: colors.accent,
+                    transform: [{ scale: checkScale }],
+                  },
+                ]}
+              >
+                <Check size={36} color="#FFFFFF" strokeWidth={3} />
+              </Animated.View>
+
+              <Text style={[styles.title, { color: colors.primary }]}>
+                Welcome to PoemCloud+
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.textLight }]}>
+                Translations, listening, and unlimited{'\n'}saving are now unlocked.
+              </Text>
+            </View>
+          </Animated.View>
+        </BlurView>
+      )}
     </Modal>
   );
 }
@@ -208,40 +208,52 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  webBlur: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
     alignItems: 'center',
-    paddingHorizontal: 40,
-    paddingVertical: 32,
-    borderRadius: 24,
+    paddingHorizontal: 48,
+    paddingVertical: 40,
+    borderRadius: 28,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 8,
+    shadowRadius: 28,
+    elevation: 12,
+    maxWidth: width - 60,
   },
-  crownContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  glowRing: {
+    position: 'absolute',
+    top: 28,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  checkContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
-    marginBottom: 8,
+    marginBottom: 10,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 15,
     textAlign: 'center',
-  },
-  sparkle: {
-    position: 'absolute',
+    lineHeight: 22,
   },
 });
