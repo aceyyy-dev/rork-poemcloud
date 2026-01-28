@@ -3,6 +3,9 @@ import * as z from "zod";
 import { createTRPCRouter, publicProcedure } from "../create-context";
 
 const MYMEMORY_API = "https://api.mymemory.translated.net/get";
+// MyMemory API free tier has a limit of ~500 characters per request
+// Longer texts may result in truncated or malformed responses
+const MAX_TEXT_LENGTH = 500;
 
 export const translateRouter = createTRPCRouter({
   translatePoem: publicProcedure
@@ -15,6 +18,15 @@ export const translateRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
+        // Validate text length to prevent API issues
+        if (input.text.length > MAX_TEXT_LENGTH) {
+          console.warn('[Translate] Text too long:', input.text.length);
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Text is too long for translation. Please try a shorter poem.',
+          });
+        }
+
         console.log('[Translate] Calling MyMemory API:', {
           source: input.source,
           target: input.target,
@@ -38,7 +50,18 @@ export const translateRouter = createTRPCRouter({
           });
         }
 
-        const data = await response.json();
+        // Parse JSON with proper error handling for malformed responses
+        let data;
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          console.error('[Translate] JSON parse error:', jsonError);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to parse translation response. Please try again.',
+          });
+        }
+
         console.log('[Translate] Response status:', data.responseStatus);
 
         if (data.responseStatus !== 200) {
