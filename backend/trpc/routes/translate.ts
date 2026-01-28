@@ -56,10 +56,10 @@ export const translateRouter = createTRPCRouter({
           console.error('[Translate] JSON parse error:', jsonError);
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: 'Invalid translation response. The text may contain unsupported characters or be too long.',
+            message: 'Invalid translation response. The text may contain unsupported characters.',
           });
         }
-        
+
         console.log('[Translate] Response status:', data.responseStatus);
 
         if (data.responseStatus !== 200) {
