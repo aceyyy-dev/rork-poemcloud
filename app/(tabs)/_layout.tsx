@@ -55,6 +55,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Sparkles size={24} color={color} strokeWidth={focused ? 2 : 1.5} />
           ),
+          href: hideTabBar ? null : '/(tabs)/feed',
         }}
       />
       <Tabs.Screen
@@ -64,15 +65,17 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Search size={24} color={color} strokeWidth={focused ? 2 : 1.5} />
           ),
+          href: hideTabBar ? null : '/(tabs)/browse',
         }}
       />
       <Tabs.Screen
         name="collections"
         options={{
-          title: "Collections",
+          title: "Library",
           tabBarIcon: ({ color, focused }) => (
             <BookOpen size={24} color={color} strokeWidth={focused ? 2 : 1.5} />
           ),
+          href: hideTabBar ? null : '/(tabs)/collections',
         }}
       />
       <Tabs.Screen
@@ -82,6 +85,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <User size={24} color={color} strokeWidth={focused ? 2 : 1.5} />
           ),
+          href: hideTabBar ? null : '/(tabs)/profile',
         }}
       />
     </Tabs>

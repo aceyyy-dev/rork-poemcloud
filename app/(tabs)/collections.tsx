@@ -26,7 +26,7 @@ import PremiumModal from '@/components/PremiumModal';
 import CreatePlaylistModal from '@/components/CreatePlaylistModal';
 import { triggerHaptic } from '@/utils/haptics';
 
-type Tab = 'curated' | 'saved' | 'playlists';
+type Tab = 'curated' | 'saved' | 'collections';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_LARGE_WIDTH = 180;
@@ -59,7 +59,7 @@ export default function CollectionsScreen() {
     router.push(`/playlist/${playlist.id}`);
   };
 
-  const handleCreatePlaylist = () => {
+  const handleCreateCollection = () => {
     triggerHaptic('light');
     if (!preferences.isPremium) {
       setShowPremiumModal(true);
@@ -298,24 +298,24 @@ export default function CollectionsScreen() {
             style={[
               styles.tab,
               { backgroundColor: colors.surface, borderColor: colors.border },
-              activeTab === 'playlists' && { backgroundColor: colors.primary, borderColor: colors.primary },
+              activeTab === 'collections' && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
-            onPress={() => { triggerHaptic('light'); setActiveTab('playlists'); }}
+            onPress={() => { triggerHaptic('light'); setActiveTab('collections'); }}
           >
             <View style={styles.tabWithBadge}>
               <Text
                 style={[
                   styles.tabText,
                   { color: colors.textMuted },
-                  activeTab === 'playlists' && { color: colors.background },
+                  activeTab === 'collections' && { color: colors.background },
                 ]}
               >
-                Playlists
+                Collections
               </Text>
               {!preferences.isPremium && (
                 <Crown
                   size={14}
-                  color={activeTab === 'playlists' ? colors.background : colors.accent}
+                  color={activeTab === 'collections' ? colors.background : colors.accent}
                 />
               )}
             </View>
@@ -406,7 +406,7 @@ export default function CollectionsScreen() {
                         Premium Feature
                       </Text>
                       <Text style={[styles.premiumBannerSubtitle, { color: colors.textMuted }]}>
-                        Create unlimited playlists with custom covers and tags
+                        Create unlimited collections with custom covers and tags
                       </Text>
                     </View>
                   </View>
@@ -423,14 +423,14 @@ export default function CollectionsScreen() {
 
               <TouchableOpacity
                 style={[styles.createPlaylistBtn, { borderColor: colors.accent }]}
-                onPress={handleCreatePlaylist}
+                onPress={handleCreateCollection}
                 activeOpacity={0.8}
               >
                 <View style={[styles.createPlaylistIcon, { backgroundColor: colors.accentLight }]}>
                   <Plus size={24} color={colors.accent} />
                 </View>
                 <Text style={[styles.createPlaylistText, { color: colors.accent }]}>
-                  Create New Playlist
+                  Create New Collection
                 </Text>
               </TouchableOpacity>
 
@@ -438,10 +438,10 @@ export default function CollectionsScreen() {
                 <View style={styles.emptyState}>
                   <ListMusic size={48} color={colors.border} strokeWidth={1} />
                   <Text style={[styles.emptyTitle, { color: colors.primary }]}>
-                    No playlists yet
+                    No collections yet
                   </Text>
                   <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-                    Create your first playlist to organize your favorite poems
+                    Create your first collection to organize your favorite poems
                   </Text>
                 </View>
               ) : (
@@ -461,7 +461,7 @@ export default function CollectionsScreen() {
           setPremium(true);
           setShowPremiumModal(false);
         }}
-        feature="Playlists"
+        feature="Collections"
       />
 
       <CreatePlaylistModal

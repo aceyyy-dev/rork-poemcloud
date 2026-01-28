@@ -127,7 +127,7 @@ export default function CreatePlaylistModal({
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
           <View style={styles.header}>
             <Text style={[styles.headerTitle, { color: colors.primary }]}>
-              New Playlist
+              New Collection
             </Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
               <X size={24} color={colors.textMuted} />
@@ -171,7 +171,7 @@ export default function CreatePlaylistModal({
                     borderColor: colors.border,
                   },
                 ]}
-                placeholder="My Playlist"
+                placeholder="My Collection"
                 placeholderTextColor={colors.textMuted}
                 value={title}
                 onChangeText={setTitle}
@@ -283,7 +283,7 @@ export default function CreatePlaylistModal({
               disabled={!title.trim()}
             >
               <Text style={[styles.createBtnText, { color: colors.textWhite }]}>
-                Create Playlist
+                Create Collection
               </Text>
             </TouchableOpacity>
           </View>

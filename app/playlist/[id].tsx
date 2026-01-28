@@ -42,7 +42,7 @@ export default function PlaylistDetailScreen() {
 
   const handleDeletePlaylist = () => {
     Alert.alert(
-      'Delete Playlist',
+      'Delete Collection',
       `Are you sure you want to delete "${playlist?.title}"? This action cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -88,7 +88,7 @@ export default function PlaylistDetailScreen() {
           <View style={styles.notFoundContainer}>
             <ListMusic size={64} color={colors.border} strokeWidth={1} />
             <Text style={[styles.notFoundTitle, { color: colors.primary }]}>
-              Playlist not found
+              Collection not found
             </Text>
             <TouchableOpacity
               style={[styles.backButton, { backgroundColor: colors.accent }]}
@@ -137,7 +137,7 @@ export default function PlaylistDetailScreen() {
               }}
             >
               <Edit3 size={20} color={colors.text} />
-              <Text style={[styles.optionText, { color: colors.text }]}>Edit Playlist</Text>
+              <Text style={[styles.optionText, { color: colors.text }]}>Edit Collection</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.optionItem}
@@ -147,7 +147,7 @@ export default function PlaylistDetailScreen() {
               }}
             >
               <Trash2 size={20} color={colors.error} />
-              <Text style={[styles.optionText, { color: colors.error }]}>Delete Playlist</Text>
+              <Text style={[styles.optionText, { color: colors.error }]}>Delete Collection</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -204,7 +204,7 @@ export default function PlaylistDetailScreen() {
                 No poems yet
               </Text>
               <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-                Add poems from the For You feed using the playlist button
+                Add poems from the For You feed using the collection button
               </Text>
             </View>
           ) : (

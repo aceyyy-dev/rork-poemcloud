@@ -100,7 +100,7 @@ export default function AddToPlaylistModal({
           <View style={[styles.container, { backgroundColor: colors.surface }]}>
             <View style={styles.header}>
               <Text style={[styles.headerTitle, { color: colors.primary }]}>
-                Add to Playlist
+                Add to Collection
               </Text>
               <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
                 <X size={24} color={colors.textMuted} />
@@ -125,7 +125,7 @@ export default function AddToPlaylistModal({
                 <Plus size={20} color={colors.accent} />
               </View>
               <Text style={[styles.createNewText, { color: colors.accent }]}>
-                Create New Playlist
+                Create New Collection
               </Text>
               {!preferences.isPremium && (
                 <Crown size={16} color={colors.accent} />
@@ -136,10 +136,10 @@ export default function AddToPlaylistModal({
               <View style={styles.emptyState}>
                 <ListMusic size={48} color={colors.border} strokeWidth={1} />
                 <Text style={[styles.emptyTitle, { color: colors.primary }]}>
-                  No playlists yet
+                  No collections yet
                 </Text>
                 <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-                  Create your first playlist to start organizing poems
+                  Create your first collection to start organizing poems
                 </Text>
               </View>
             ) : (

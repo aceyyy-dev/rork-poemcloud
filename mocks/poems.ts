@@ -1084,6 +1084,725 @@ Connecting us to the source.`,
     'Zulu',
     'Poetry celebrating African philosophy and ancestral wisdom.'
   ),
+  // UK POEMS - Shakespeare, Keats, Wordsworth, Shelley
+  createPoem(
+    'sonnet-18',
+    'Sonnet 18',
+    `Shall I compare thee to a summer's day?
+Thou art more lovely and more temperate:
+Rough winds do shake the darling buds of May,
+And summer's lease hath all too short a date.
+
+Sometime too hot the eye of heaven shines,
+And often is his gold complexion dimm'd;
+And every fair from fair sometime declines,
+By chance or nature's changing course untrimm'd.`,
+    'william-shakespeare',
+    ['love', 'hope'],
+    'English',
+    'One of Shakespeare\'s most famous sonnets celebrating eternal beauty through poetry.'
+  ),
+  createPoem(
+    'ode-nightingale',
+    'Ode to a Nightingale',
+    `My heart aches, and a drowsy numbness pains
+My sense, as though of hemlock I had drunk,
+Or emptied some dull opiate to the drains
+One minute past, and Lethe-wards had sunk:
+
+'Tis not through envy of thy happy lot,
+But being too happy in thine happiness,—
+That thou, light-winged Dryad of the trees
+In some melodious plot.`,
+    'john-keats',
+    ['melancholy', 'calm', 'reflection'],
+    'English',
+    'Keats\'s meditation on mortality, art, and the transcendent power of beauty.'
+  ),
+  createPoem(
+    'daffodils',
+    'I Wandered Lonely as a Cloud',
+    `I wandered lonely as a cloud
+That floats on high o'er vales and hills,
+When all at once I saw a crowd,
+A host, of golden daffodils;
+
+Beside the lake, beneath the trees,
+Fluttering and dancing in the breeze.
+Continuous as the stars that shine
+And twinkle on the milky way.`,
+    'william-wordsworth',
+    ['joy', 'calm', 'hope'],
+    'English',
+    'Wordsworth\'s iconic celebration of nature and memory.'
+  ),
+  createPoem(
+    'ozymandias',
+    'Ozymandias',
+    `I met a traveller from an antique land,
+Who said—"Two vast and trunkless legs of stone
+Stand in the desert. . . . Near them, on the sand,
+Half sunk a shattered visage lies, whose frown,
+
+And wrinkled lip, and sneer of cold command,
+Tell that its sculptor well those passions read
+Which yet survive, stamped on these lifeless things,
+The hand that mocked them, and the heart that fed.`,
+    'percy-shelley',
+    ['reflection', 'melancholy'],
+    'English',
+    'Shelley\'s famous sonnet on the transience of power and empire.'
+  ),
+  // FRENCH POEMS
+  createPoem(
+    'invitation-voyage',
+    'Invitation to the Voyage',
+    `My child, my sister,
+Think of the sweetness
+Of going there to live together!
+To love at leisure,
+To love and to die
+In a land that resembles you!
+
+The misty suns
+Of those hazy skies
+Have for my spirit the charms.`,
+    'charles-baudelaire',
+    ['love', 'longing', 'calm'],
+    'French',
+    'Baudelaire\'s dreamlike invitation to an ideal world of beauty and harmony.'
+  ),
+  createPoem(
+    'drunken-boat',
+    'The Drunken Boat',
+    `As I was going down impassive Rivers,
+I no longer felt myself guided by haulers:
+Screaming Redskins had taken them as targets
+And nailed them naked to colored stakes.
+
+I was heedless of all crews,
+Carriers of English cotton or Flemish grain.
+When with my haulers this uproar was done
+The Rivers let me go where I wanted.`,
+    'arthur-rimbaud',
+    ['reflection', 'hope'],
+    'French',
+    'Rimbaud\'s visionary poem of liberation and artistic freedom.'
+  ),
+  createPoem(
+    'autumn-song',
+    'Autumn Song',
+    `The long sobs
+Of the violins
+Of autumn
+Wound my heart
+With a monotonous
+Languor.
+
+All suffocating
+And pale, when
+The hour sounds,
+I remember
+Former days
+And I cry.`,
+    'paul-verlaine',
+    ['sad', 'melancholy'],
+    'French',
+    'Verlaine\'s melancholic evocation of autumn and memory.'
+  ),
+  // GERMAN POEMS
+  createPoem(
+    'erlking',
+    'The Erlking',
+    `Who rides so late through the night and wind?
+It is the father with his child;
+He has the boy well in his arm,
+He holds him safely, he keeps him warm.
+
+"My son, why do you hide your face in fear?"
+"Father, do you not see the Erlking?
+The Erlking with crown and train?"
+"My son, it is a streak of mist."`,
+    'johann-goethe',
+    ['sad', 'melancholy', 'reflection'],
+    'German',
+    'Goethe\'s haunting ballad of a supernatural encounter.'
+  ),
+  createPoem(
+    'panther',
+    'The Panther',
+    `His vision, from the constantly passing bars,
+has grown so weary that it cannot hold
+anything else. It seems to him there are
+a thousand bars; and behind the bars, no world.
+
+As he paces in cramped circles, over and over,
+the movement of his powerful soft strides
+is like a ritual dance around a center
+in which a mighty will stands paralyzed.`,
+    'rainer-rilke',
+    ['sad', 'reflection', 'melancholy'],
+    'German',
+    'Rilke\'s profound meditation on captivity and the caged soul.'
+  ),
+  createPoem(
+    'lorelei',
+    'The Lorelei',
+    `I do not know what it means
+That I am so sad;
+A tale from ancient times
+I cannot get out of my head.
+
+The air is cool and twilight falls
+And softly flows the Rhine;
+The peak of the mountain glistens
+In the fading sunshine.`,
+    'heinrich-heine',
+    ['melancholy', 'longing'],
+    'German',
+    'Heine\'s famous poem about the legendary siren of the Rhine.'
+  ),
+  // ITALIAN POEMS
+  createPoem(
+    'inferno-opening',
+    'Inferno: Opening',
+    `Midway upon the journey of our life
+I found myself within a forest dark,
+For the straightforward pathway had been lost.
+
+Ah me! how hard a thing it is to say
+What was this forest savage, rough, and stern,
+Which in the very thought renews the fear.
+
+So bitter is it, death is little more.`,
+    'dante-alighieri',
+    ['reflection', 'hope', 'melancholy'],
+    'Italian',
+    'The opening of Dante\'s Divine Comedy, beginning his journey through Hell.'
+  ),
+  createPoem(
+    'infinito',
+    'The Infinite',
+    `Always dear to me was this lonely hill,
+And this hedge, which from so great a part
+Of the farthest horizon excludes the gaze.
+
+But sitting and gazing, endless
+Spaces beyond that, and superhuman
+Silences, and profoundest quiet
+I in my thoughts imagine.`,
+    'giacomo-leopardi',
+    ['calm', 'reflection', 'melancholy'],
+    'Italian',
+    'Leopardi\'s contemplation of infinity and the sublime.'
+  ),
+  // SPANISH POEMS
+  createPoem(
+    'romance-sonambulo',
+    'Sleepwalking Ballad',
+    `Green, how I want you green.
+Green wind. Green branches.
+The ship out on the sea
+and the horse on the mountain.
+
+With the shadow at her waist
+she dreams on her balcony,
+green flesh, green hair,
+with eyes of cold silver.`,
+    'federico-garcia-lorca',
+    ['love', 'melancholy', 'longing'],
+    'Spanish',
+    'Lorca\'s haunting ballad blending Gypsy themes with surrealism.'
+  ),
+  createPoem(
+    'traveler',
+    'Traveler',
+    `Traveler, there is no path,
+the path is made by walking.
+
+By walking one makes the path,
+and upon looking back
+one sees the path that never
+will be trod again.
+
+Traveler, there is no path,
+only wakes upon the sea.`,
+    'antonio-machado',
+    ['hope', 'reflection'],
+    'Spanish',
+    'Machado\'s famous meditation on life\'s journey and individual destiny.'
+  ),
+  // GREEK POEMS
+  createPoem(
+    'ithaka',
+    'Ithaka',
+    `As you set out for Ithaka
+hope the voyage is a long one,
+full of adventure, full of discovery.
+Laistrygonians and Cyclops,
+angry Poseidon—don't be afraid of them:
+you'll never find things like that on your way
+as long as you keep your thoughts raised high.`,
+    'constantine-cavafy',
+    ['hope', 'reflection'],
+    'Greek',
+    'Cavafy\'s allegory of life\'s journey using Homer\'s Odyssey.'
+  ),
+  createPoem(
+    'axion-esti',
+    'The Axion Esti',
+    `In the beginning the light And the first hour
+when lips still in clay
+tried out the things of the world—
+
+Green blood and bulbs golden in the earth
+And the sea, so that I could learn
+What wood the wood is made of.`,
+    'odysseas-elytis',
+    ['hope', 'joy', 'reflection'],
+    'Greek',
+    'Elytis\'s Nobel Prize-winning hymn to the Greek spirit and light.'
+  ),
+  // ARGENTINE POEMS
+  createPoem(
+    'limits',
+    'Limits',
+    `Of all the streets that blur in to the sunset,
+There must be one (which, I am not sure)
+That I by now have walked for the last time
+Without guessing it, the pawn of that Someone
+
+Who fixes in advance omnipotent laws,
+Sets up a secret and unwavering scale
+For all the shadows, dreams, and forms
+Woven into the texture of this life.`,
+    'jorge-luis-borges',
+    ['melancholy', 'reflection'],
+    'Spanish',
+    'Borges\'s meditation on mortality and the unknowable limits of existence.'
+  ),
+  createPoem(
+    'im-going-to-sleep',
+    'I\'m Going to Sleep',
+    `Teeth of flowers, headdress of dew,
+hands of herbs, you, gentle nurse,
+prepare my earthly sheets for me
+and the down of weeded moss.
+
+I\'m going to sleep, my nurse, put me to bed.
+Set a lamp at the headboard;
+a constellation, whichever one you like;
+all are good: lower it a little.`,
+    'alfonsina-storni',
+    ['calm', 'sad', 'melancholy'],
+    'Spanish',
+    'Storni\'s poignant farewell poem written shortly before her death.'
+  ),
+  // MEXICAN POEMS
+  createPoem(
+    'sunstone',
+    'Sunstone',
+    `A willow of crystal, a poplar of water,
+a tall fountain the wind arches over,
+a tree deep-rooted yet dancing still,
+a course of a river that turns, moves on,
+
+doubles back, and comes full circle,
+forever arriving.`,
+    'octavio-paz',
+    ['love', 'reflection', 'hope'],
+    'Spanish',
+    'Paz\'s Nobel Prize-winning circular poem on time, love, and consciousness.'
+  ),
+  createPoem(
+    'this-afternoon',
+    'This Afternoon, My Dear',
+    `This afternoon, my dear, when we spoke,
+I could see in your face and hear in your voice
+that you were not convinced:
+I\'ll convince you.
+
+Love is born of beautiful words,
+love itself does not live in them:
+words are leaves, but love is the root.`,
+    'sor-juana',
+    ['love', 'reflection'],
+    'Spanish',
+    'Sor Juana\'s defense of love and the power of authentic feeling.'
+  ),
+  // BRAZILIAN POEMS
+  createPoem(
+    'middle-of-road',
+    'In the Middle of the Road',
+    `In the middle of the road there was a stone
+there was a stone in the middle of the road
+there was a stone
+in the middle of the road there was a stone.
+
+Never should I forget this event
+in the life of my fatigued retinas.
+Never should I forget that in the middle of the road
+there was a stone.`,
+    'carlos-drummond',
+    ['reflection', 'melancholy'],
+    'Portuguese',
+    'Drummond\'s modernist poem that became an icon of Brazilian literature.'
+  ),
+  createPoem(
+    'motif',
+    'Motif',
+    `I sing because the moment exists
+and my life is complete.
+I am neither happy nor sad:
+I am a poet.
+
+Brother of the fleeting things,
+I feel no pride nor scorn.
+I transform chance events
+into an endless journey.`,
+    'cecilia-meireles',
+    ['calm', 'reflection', 'hope'],
+    'Portuguese',
+    'Meireles\'s definition of the poet\'s existence and purpose.'
+  ),
+  // EGYPTIAN POEMS
+  createPoem(
+    'nile-poem',
+    'The Nile',
+    `From where does the Nile come?
+From the tears of angels,
+from the prayers of the saints,
+from the dreams of Pharaohs.
+
+It flows through time,
+carrying the secrets of ages,
+a silver serpent
+beneath the golden sun.`,
+    'ahmed-shawqi',
+    ['hope', 'reflection'],
+    'Arabic',
+    'Shawqi\'s tribute to Egypt\'s eternal river.'
+  ),
+  // IRAQI POEMS
+  createPoem(
+    'cholera',
+    'Cholera',
+    `It is night.
+Listen to the echo of the mourner
+receiving the silence with laments,
+In the silence of the night.
+
+Behind the door, the grieving stranger
+recalls the dead:
+the echo of its call:
+wherever you listen, there is grief.`,
+    'nazik-al-malaika',
+    ['sad', 'melancholy'],
+    'Arabic',
+    'Al-Malaika\'s pioneering free verse poem mourning an epidemic.'
+  ),
+  // MORE AMERICAN POEMS
+  createPoem(
+    'song-myself',
+    'Song of Myself',
+    `I celebrate myself, and sing myself,
+And what I assume you shall assume,
+For every atom belonging to me as good belongs to you.
+
+I loafe and invite my soul,
+I lean and loafe at my ease observing a spear of summer grass.
+
+My tongue, every atom of my blood, form'd from this soil, this air.`,
+    'walt-whitman',
+    ['joy', 'hope', 'reflection'],
+    'English',
+    'Whitman\'s democratic epic celebrating the self and all humanity.'
+  ),
+  createPoem(
+    'road-not-taken',
+    'The Road Not Taken',
+    `Two roads diverged in a yellow wood,
+And sorry I could not travel both
+And be one traveler, long I stood
+And looked down one as far as I could
+To where it bent in the undergrowth;
+
+Then took the other, as just as fair,
+And having perhaps the better claim,
+Because it was grassy and wanted wear.`,
+    'robert-frost',
+    ['reflection', 'hope'],
+    'English',
+    'Frost\'s meditation on choice and the paths we take in life.'
+  ),
+  createPoem(
+    'still-i-rise-full',
+    'Still I Rise',
+    `You may write me down in history
+With your bitter, twisted lies,
+You may tread me in the very dirt
+But still, like dust, I'll rise.
+
+Does my sassiness upset you?
+Why are you beset with gloom?
+'Cause I walk like I've got oil wells
+Pumping in my living room.`,
+    'maya-angelou',
+    ['hope', 'healing'],
+    'English',
+    'Angelou\'s defiant anthem of resilience and dignity.'
+  ),
+  createPoem(
+    'raven',
+    'The Raven',
+    `Once upon a midnight dreary, while I pondered, weak and weary,
+Over many a quaint and curious volume of forgotten lore—
+While I nodded, nearly napping, suddenly there came a tapping,
+As of some one gently rapping, rapping at my chamber door.
+
+"'Tis some visitor," I muttered, "tapping at my chamber door—
+Only this and nothing more."`,
+    'edgar-allan-poe',
+    ['melancholy', 'sad'],
+    'English',
+    'Poe\'s haunting narrative poem of loss and the supernatural.'
+  ),
+  // MORE RUSSIAN POEMS
+  createPoem(
+    'i-loved-you',
+    'I Loved You',
+    `I loved you; even now I may confess,
+Some embers of my love their fire retain;
+But do not let it cause you more distress,
+I do not want to sadden you again.
+
+Hopeless and tonguetied, yet I loved you dearly
+With pangs the jealous and the timid know;
+So tenderly I loved you, so sincerely,
+I pray God grant another love you so.`,
+    'alexander-pushkin',
+    ['love', 'sad', 'hope'],
+    'Russian',
+    'Pushkin\'s tender farewell to a past love.'
+  ),
+  createPoem(
+    'attempt-jealousy',
+    'An Attempt at Jealousy',
+    `How is your life with the other one,
+simpler, isn't it? One stroke of the oar
+then a long coastline, and soon
+even the memory of me
+
+will be a floating island
+(in the sky, not on the waters):
+spirits, spirits, you will be
+sisters, and never lovers.`,
+    'marina-tsvetaeva',
+    ['love', 'sad', 'longing'],
+    'Russian',
+    'Tsvetaeva\'s passionate and defiant poem on love and jealousy.'
+  ),
+  // MORE CHINESE POEMS
+  createPoem(
+    'drinking-alone',
+    'Drinking Alone Under the Moon',
+    `A jug of wine among the flowers,
+I drink alone, no friend near.
+Raising my cup, I invite the moon;
+With my shadow, we become three.
+
+The moon does not know how to drink;
+My shadow follows me in vain.
+But with moon and shadow as companions,
+I may enjoy the spring.`,
+    'li-bai',
+    ['calm', 'melancholy', 'reflection'],
+    'Chinese',
+    'Li Bai\'s famous poem on solitude and the companionship of nature.'
+  ),
+  createPoem(
+    'moonlit-night',
+    'Moonlit Night',
+    `Tonight at Fu-chou, she watches the moon alone,
+From her chamber, I think of my children far away.
+I pity them, too young to remember Chang\'an,
+Her cloud-like hair damp with fragrant mist,
+
+Jade arms cold in the clear moonlight.
+When shall we lean in the empty window together,
+As the moonlight dries our tears?`,
+    'du-fu',
+    ['longing', 'sad', 'love'],
+    'Chinese',
+    'Du Fu\'s touching poem of separation during wartime.'
+  ),
+  // MORE KOREAN POEMS
+  createPoem(
+    'foreword',
+    'Foreword',
+    `Dying away to heaven,
+I would have no grief.
+The wind that stirs the leaves
+Also torments me.
+
+With a heart that sings the stars,
+I shall love all dying things.
+And I must walk the path
+That is given to me.`,
+    'yun-dong-ju',
+    ['hope', 'reflection', 'calm'],
+    'Korean',
+    'Yun Dong-ju\'s poetic manifesto written under Japanese occupation.'
+  ),
+  // MORE TURKISH POEMS
+  createPoem(
+    'on-living-full',
+    'On Living',
+    `Living is no laughing matter:
+you must live with great seriousness
+like a squirrel, for example—
+I mean without looking for something beyond and above living,
+I mean living must be your whole occupation.
+
+Living is no laughing matter:
+you must take it seriously,
+so much so and to such a degree
+that, for example, your hands tied behind your back,
+your back to the wall.`,
+    'nazim-hikmet',
+    ['hope', 'reflection'],
+    'Turkish',
+    'Hikmet\'s passionate affirmation of life despite adversity.'
+  ),
+  // MORE PALESTINIAN POEMS
+  createPoem(
+    'identity-card',
+    'Identity Card',
+    `Write down!
+I am an Arab
+And my identity card number is fifty thousand
+I have eight children
+And the ninth will come after a summer
+Will you be angry?
+
+Write down!
+I am an Arab
+Employed with fellow workers at a quarry.`,
+    'mahmoud-darwish',
+    ['hope', 'reflection', 'sad'],
+    'Arabic',
+    'Darwish\'s defiant assertion of Palestinian identity and dignity.'
+  ),
+  // MORE PAKISTANI POEMS
+  createPoem(
+    'speak-full',
+    'Speak',
+    `Speak, for your lips are free;
+Speak, your tongue is still your own;
+This straight body still is yours—
+Speak, your life is still your own.
+
+Look how in the blacksmith\'s forge
+The flames leap high and the iron glows red;
+The bars of the cage are opening,
+The tongue of each padlock is sliding loose.`,
+    'faiz-ahmed-faiz',
+    ['hope', 'reflection'],
+    'Urdu',
+    'Faiz\'s call for courage and freedom of expression.'
+  ),
+  // MORE INDIAN POEMS
+  createPoem(
+    'thousand-desires-full',
+    'A Thousand Desires',
+    `A thousand desires, each worth dying for—
+Many were satisfied, yet many remain.
+I have spent so many nights crying,
+Yet still my heart is not at ease.
+
+Why do you ask how I am?
+The same way as before.
+And what have the years taught me?
+Only that nothing has changed.`,
+    'mirza-ghalib',
+    ['love', 'melancholy', 'reflection'],
+    'Urdu',
+    'Ghalib\'s profound meditation on desire and the human condition.'
+  ),
+  // MORE JAPANESE HAIKU
+  createPoem(
+    'evening-bell',
+    'Evening Bell',
+    `Evening bell—
+the fragrance of cherry blossoms
+still lingering.`,
+    'yosa-buson',
+    ['calm', 'melancholy'],
+    'Japanese',
+    'Buson\'s evocation of transience and beauty.'
+  ),
+  createPoem(
+    'snail-fuji',
+    'O Snail',
+    `O snail
+Climb Mount Fuji,
+But slowly, slowly!`,
+    'kobayashi-issa',
+    ['hope', 'calm'],
+    'Japanese',
+    'Issa\'s gentle encouragement to persevere at one\'s own pace.'
+  ),
+  // MORE PERSIAN POEMS
+  createPoem(
+    'children-adam',
+    'Children of Adam',
+    `Human beings are members of a whole,
+In creation of one essence and soul.
+If one member is afflicted with pain,
+Other members uneasy will remain.
+
+If you have no sympathy for human pain,
+The name of human you cannot retain.`,
+    'saadi',
+    ['hope', 'healing', 'reflection'],
+    'Persian',
+    'Saadi\'s famous poem inscribed at the UN entrance, on human unity.'
+  ),
+  createPoem(
+    'rubaiyat',
+    'The Rubaiyat',
+    `Awake! for Morning in the Bowl of Night
+Has flung the Stone that puts the Stars to Flight:
+And Lo! the Hunter of the East has caught
+The Sultan\'s Turret in a Noose of Light.
+
+Come, fill the Cup, and in the fire of Spring
+The Winter garment of Repentance fling:
+The Bird of Time has but a little way
+To fly—and Lo! the Bird is on the Wing.`,
+    'khayyam',
+    ['reflection', 'hope', 'melancholy'],
+    'Persian',
+    'Khayyam\'s philosophical quatrains on mortality and seizing the day.'
+  ),
+  // MORE CHILEAN POEMS
+  createPoem(
+    'walking-around',
+    'Walking Around',
+    `It happens that I am tired of being a man.
+It happens that I go into tailors\' shops and movies
+withered, impervious, like a felt swan
+navigating in a water of origin and ash.
+
+The smell of barbershops makes me weep.
+I want only a rest from stones or from wool,
+I want only not to see establishments or gardens,
+or merchandise or eyeglasses or elevators.`,
+    'pablo-neruda',
+    ['sad', 'melancholy', 'reflection'],
+    'Spanish',
+    'Neruda\'s surrealist expression of urban alienation and existential weariness.'
+  ),
 ];
 
 export const getTodaysPoem = (): Poem => {
