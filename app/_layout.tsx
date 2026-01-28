@@ -8,6 +8,7 @@ import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { PurchasesProvider } from "@/contexts/PurchasesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TTSProvider } from "@/contexts/TTSContext";
+import { PlaylistProvider } from "@/contexts/PlaylistContext";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -86,6 +87,14 @@ function RootLayoutNav() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="playlist/[id]"
+        options={{
+          headerShown: true,
+          title: "",
+          headerTransparent: true,
+        }}
+      />
     </Stack>
   );
 }
@@ -102,9 +111,11 @@ export default function RootLayout() {
             <PurchasesProvider>
               <AuthProvider>
                 <UserProvider>
-                  <TTSProvider>
-                    <RootLayoutNav />
-                  </TTSProvider>
+                  <PlaylistProvider>
+                    <TTSProvider>
+                      <RootLayoutNav />
+                    </TTSProvider>
+                  </PlaylistProvider>
                 </UserProvider>
               </AuthProvider>
             </PurchasesProvider>

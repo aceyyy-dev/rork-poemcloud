@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Heart, Bookmark, Share2, Headphones, Languages, Crown, Search, X, Check, Play, Pause } from 'lucide-react-native';
+import { Heart, Bookmark, Share2, Headphones, Languages, Crown, Search, X, Check, Play, Pause, ListPlus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
@@ -28,6 +28,7 @@ import ListenPremiumModal from '@/components/ListenPremiumModal';
 import * as Haptics from 'expo-haptics';
 import { useTTS } from '@/contexts/TTSContext';
 import PoemShareCard from '@/components/PoemShareCard';
+import AddToPlaylistModal from '@/components/AddToPlaylistModal';
 
 
 const { width, height } = Dimensions.get('window');
@@ -67,6 +68,8 @@ export default function FeedScreen() {
   const [sharePoem, setSharePoem] = useState<Poem | null>(null);
   const [translationCache, setTranslationCache] = useState<Record<string, string>>({});
   const [translationError, setTranslationError] = useState<string | null>(null);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [playlistPoem, setPlaylistPoem] = useState<Poem | null>(null);
 
   const ITEM_HEIGHT = height - insets.top - insets.bottom - 120;
 
@@ -151,6 +154,14 @@ export default function FeedScreen() {
     setShowShareModal(true);
   }, []);
 
+  const handleAddToPlaylist = useCallback((poem: Poem) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setPlaylistPoem(poem);
+    setShowPlaylistModal(true);
+  }, []);
+
   const handleListen = useCallback((poemId: string, poemText: string) => {
     if (!preferences.isPremium) {
       setShowListenModal(true);
@@ -204,11 +215,12 @@ export default function FeedScreen() {
       onToggleTranslation={() => {
         setShowTranslation(prev => ({ ...prev, [poem.id]: !prev[poem.id] }));
       }}
+      onAddToPlaylist={() => handleAddToPlaylist(poem)}
       onPress={() => router.push(`/poem/${poem.id}`)}
       onPoetPress={() => router.push(`/poet/${poem.poetId}`)}
       colors={colors}
     />
-  ), [isLiked, isBookmarked, preferences.isPremium, toggleLike, toggleBookmark, router, colors, translatedPoems, showTranslation, isSpeakingPoem, hasActiveAudio, isPaused, ITEM_HEIGHT, handleListen, progress, getRemainingTime]);
+  ), [isLiked, isBookmarked, preferences.isPremium, toggleLike, toggleBookmark, router, colors, translatedPoems, showTranslation, isSpeakingPoem, hasActiveAudio, isPaused, ITEM_HEIGHT, handleListen, progress, getRemainingTime, handleAddToPlaylist]);
 
   const getItemLayout = useCallback((_: any, index: number) => ({
     length: ITEM_HEIGHT,
@@ -328,6 +340,22 @@ export default function FeedScreen() {
           }}
         />
       )}
+
+      {playlistPoem && (
+        <AddToPlaylistModal
+          visible={showPlaylistModal}
+          onClose={() => {
+            setShowPlaylistModal(false);
+            setPlaylistPoem(null);
+          }}
+          poem={playlistPoem}
+          onShowPremium={() => {
+            setShowPlaylistModal(false);
+            setPlaylistPoem(null);
+            setShowPremiumModal(true);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -353,6 +381,7 @@ interface FeedItemProps {
   onListen: () => void;
   onTranslate: () => void;
   onToggleTranslation: () => void;
+  onAddToPlaylist: () => void;
   onPress: () => void;
   onPoetPress: () => void;
   colors: any;
@@ -379,6 +408,7 @@ const FeedItem = React.memo(function FeedItem({
   onListen,
   onTranslate,
   onToggleTranslation,
+  onAddToPlaylist,
   onPress,
   onPoetPress,
   colors,
@@ -571,6 +601,17 @@ const FeedItem = React.memo(function FeedItem({
                 />
               )}
               {!isPremium && !isPlaying && <Crown size={10} color={colors.accent} style={styles.crownIcon} />}
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={onAddToPlaylist} style={styles.actionBtn}>
+            <View style={styles.premiumAction}>
+              <ListPlus
+                size={26}
+                color={isPremium ? colors.textLight : colors.accent}
+                strokeWidth={1.5}
+              />
+              {!isPremium && <Crown size={10} color={colors.accent} style={styles.crownIcon} />}
             </View>
           </TouchableOpacity>
         </View>

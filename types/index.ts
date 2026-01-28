@@ -65,3 +65,14 @@ export interface Country {
   name: string;
   flag: string;
 }
+
+export interface Playlist {
+  id: string;
+  title: string;
+  coverImageUrl?: string;
+  moods: Mood[];
+  countryCodes: string[];
+  poemIds: string[];
+  createdAt: number;
+  updatedAt: number;
+}

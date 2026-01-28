@@ -5,26 +5,32 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Crown, Bookmark, Heart, Cloud, BookOpen, Globe } from 'lucide-react-native';
+import { Crown, Bookmark, Heart, Cloud, BookOpen, Globe, ListMusic, Plus, MoreHorizontal } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
+import { usePlaylists } from '@/contexts/PlaylistContext';
 import { collectionCategories } from '@/mocks/collections';
 import { poems } from '@/mocks/poems';
-import { Collection } from '@/types';
+import { countries } from '@/mocks/countries';
+import { Collection, Playlist } from '@/types';
 import PremiumModal from '@/components/PremiumModal';
+import CreatePlaylistModal from '@/components/CreatePlaylistModal';
 
-type Tab = 'curated' | 'saved';
+type Tab = 'curated' | 'saved' | 'playlists';
 
 export default function CollectionsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const { preferences, setPremium, bookmarkCount, maxFreeBookmarks } = useUser();
+  const { playlists } = usePlaylists();
   const [activeTab, setActiveTab] = useState<Tab>('curated');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
 
   const savedPoems = poems.filter(p => preferences.bookmarkedPoemIds.includes(p.id));
 
@@ -34,6 +40,18 @@ export default function CollectionsScreen() {
     } else {
       router.push(`/collection/${collection.id}`);
     }
+  };
+
+  const handlePlaylistPress = (playlist: Playlist) => {
+    router.push(`/playlist/${playlist.id}`);
+  };
+
+  const handleCreatePlaylist = () => {
+    if (!preferences.isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+    setShowCreatePlaylistModal(true);
   };
 
   const getCategoryIcon = (categoryId: string) => {
@@ -49,6 +67,11 @@ export default function CollectionsScreen() {
       default:
         return null;
     }
+  };
+
+  const getCountryFlag = (code: string) => {
+    const country = countries.find(c => c.code === code);
+    return country?.flag || '🌍';
   };
 
   const renderCollectionCard = (collection: Collection, isLarge: boolean = false) => (
@@ -79,6 +102,48 @@ export default function CollectionsScreen() {
           {collection.poemCount} poems
         </Text>
       </View>
+    </TouchableOpacity>
+  );
+
+  const renderPlaylistCard = (playlist: Playlist) => (
+    <TouchableOpacity
+      key={playlist.id}
+      style={[styles.playlistCard, { backgroundColor: colors.surface }]}
+      onPress={() => handlePlaylistPress(playlist)}
+      activeOpacity={0.8}
+    >
+      {playlist.coverImageUrl ? (
+        <Image source={{ uri: playlist.coverImageUrl }} style={styles.playlistCover} />
+      ) : (
+        <LinearGradient
+          colors={[colors.accent, colors.accentLight]}
+          style={styles.playlistCover}
+        >
+          <ListMusic size={28} color={colors.textWhite} />
+        </LinearGradient>
+      )}
+      <View style={styles.playlistContent}>
+        <Text style={[styles.playlistTitle, { color: colors.primary }]} numberOfLines={1}>
+          {playlist.title}
+        </Text>
+        <Text style={[styles.playlistMeta, { color: colors.textMuted }]}>
+          {playlist.poemIds.length} poem{playlist.poemIds.length !== 1 ? 's' : ''}
+        </Text>
+        {(playlist.moods.length > 0 || playlist.countryCodes.length > 0) && (
+          <View style={styles.playlistTags}>
+            {playlist.moods.slice(0, 2).map(mood => (
+              <View
+                key={mood}
+                style={[styles.moodDot, { backgroundColor: colors.mood[mood] }]}
+              />
+            ))}
+            {playlist.countryCodes.slice(0, 2).map(code => (
+              <Text key={code} style={styles.flagEmoji}>{getCountryFlag(code)}</Text>
+            ))}
+          </View>
+        )}
+      </View>
+      <MoreHorizontal size={20} color={colors.textMuted} />
     </TouchableOpacity>
   );
 
@@ -150,6 +215,32 @@ export default function CollectionsScreen() {
               </View>
             </View>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              activeTab === 'playlists' && { backgroundColor: colors.primary, borderColor: colors.primary },
+            ]}
+            onPress={() => setActiveTab('playlists')}
+          >
+            <View style={styles.tabWithBadge}>
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: colors.textMuted },
+                  activeTab === 'playlists' && { color: colors.background },
+                ]}
+              >
+                Playlists
+              </Text>
+              {!preferences.isPremium && (
+                <Crown
+                  size={14}
+                  color={activeTab === 'playlists' ? colors.background : colors.accent}
+                />
+              )}
+            </View>
+          </TouchableOpacity>
         </View>
 
         <ScrollView
@@ -179,7 +270,7 @@ export default function CollectionsScreen() {
                 </View>
               ))}
             </>
-          ) : (
+          ) : activeTab === 'saved' ? (
             <>
               {!preferences.isPremium && (
                 <View style={[styles.limitBanner, { backgroundColor: colors.premiumLight }]}>
@@ -233,6 +324,61 @@ export default function CollectionsScreen() {
                 ))
               )}
             </>
+          ) : (
+            <>
+              {!preferences.isPremium && (
+                <View style={[styles.premiumBanner, { backgroundColor: colors.premiumLight }]}>
+                  <View style={styles.premiumBannerContent}>
+                    <Crown size={24} color={colors.accent} />
+                    <View style={styles.premiumBannerText}>
+                      <Text style={[styles.premiumBannerTitle, { color: colors.primary }]}>
+                        Premium Feature
+                      </Text>
+                      <Text style={[styles.premiumBannerSubtitle, { color: colors.textMuted }]}>
+                        Create unlimited playlists with custom covers and tags
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.unlockButton, { backgroundColor: colors.accent }]}
+                    onPress={() => setShowPremiumModal(true)}
+                  >
+                    <Text style={[styles.unlockButtonText, { color: colors.textWhite }]}>
+                      Unlock
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[styles.createPlaylistBtn, { borderColor: colors.accent }]}
+                onPress={handleCreatePlaylist}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.createPlaylistIcon, { backgroundColor: colors.accentLight }]}>
+                  <Plus size={24} color={colors.accent} />
+                </View>
+                <Text style={[styles.createPlaylistText, { color: colors.accent }]}>
+                  Create New Playlist
+                </Text>
+              </TouchableOpacity>
+
+              {playlists.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <ListMusic size={48} color={colors.border} strokeWidth={1} />
+                  <Text style={[styles.emptyTitle, { color: colors.primary }]}>
+                    No playlists yet
+                  </Text>
+                  <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+                    Create your first playlist to organize your favorite poems
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.playlistsContainer}>
+                  {playlists.map(playlist => renderPlaylistCard(playlist))}
+                </View>
+              )}
+            </>
           )}
         </ScrollView>
       </SafeAreaView>
@@ -244,7 +390,12 @@ export default function CollectionsScreen() {
           setPremium(true);
           setShowPremiumModal(false);
         }}
-        feature="Unlimited bookmarks"
+        feature="Playlists"
+      />
+
+      <CreatePlaylistModal
+        visible={showCreatePlaylistModal}
+        onClose={() => setShowCreatePlaylistModal(false)}
       />
     </View>
   );
@@ -285,10 +436,10 @@ const styles = StyleSheet.create({
   tabWithBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   tabText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
   },
   badge: {
@@ -407,6 +558,105 @@ const styles = StyleSheet.create({
   upgradeText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  premiumBanner: {
+    marginHorizontal: 20,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  premiumBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  premiumBannerText: {
+    flex: 1,
+  },
+  premiumBannerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  premiumBannerSubtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  unlockButton: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  unlockButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  createPlaylistBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginHorizontal: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    marginBottom: 20,
+  },
+  createPlaylistIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  createPlaylistText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  playlistsContainer: {
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  playlistCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 14,
+    gap: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  playlistCover: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playlistContent: {
+    flex: 1,
+  },
+  playlistTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  playlistMeta: {
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  playlistTags: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  flagEmoji: {
+    fontSize: 14,
   },
   emptyState: {
     alignItems: 'center',
