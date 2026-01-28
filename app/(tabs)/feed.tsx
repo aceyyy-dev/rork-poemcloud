@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -29,9 +29,11 @@ import * as Haptics from 'expo-haptics';
 import { useTTS } from '@/contexts/TTSContext';
 import PoemShareCard from '@/components/PoemShareCard';
 import AddToPlaylistModal from '@/components/AddToPlaylistModal';
+import { useKeepAwake } from 'expo-keep-awake';
 
 
 const { width, height } = Dimensions.get('window');
+const AUTO_SCROLL_INTERVAL = 8000;
 const CARD_PADDING = 20;
 const ACTION_RAIL_WIDTH = 52;
 
@@ -50,11 +52,17 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 export default function FeedScreen() {
+  useKeepAwake();
+  
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { preferences, isLiked, isBookmarked, toggleLike, toggleBookmark, setPremium, markAsRead } = useUser();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+  const flatListRef = useRef<FlatList>(null);
+  const autoScrollTimer = useRef<NodeJS.Timeout | null>(null);
+  const userInteractionTimer = useRef<NodeJS.Timeout | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeature, setPremiumFeature] = useState<string>();
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
@@ -72,6 +80,61 @@ export default function FeedScreen() {
   const [playlistPoem, setPlaylistPoem] = useState<Poem | null>(null);
 
   const ITEM_HEIGHT = height - insets.top - insets.bottom - 120;
+
+  const startAutoScroll = useCallback(() => {
+    if (autoScrollTimer.current) {
+      clearInterval(autoScrollTimer.current);
+    }
+    
+    autoScrollTimer.current = setInterval(() => {
+      if (!autoScrollEnabled) return;
+      
+      setCurrentIndex(prevIndex => {
+        const nextIndex = prevIndex + 1 < sortedPoems.length ? prevIndex + 1 : 0;
+        flatListRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+        return nextIndex;
+      });
+    }, AUTO_SCROLL_INTERVAL);
+  }, [autoScrollEnabled]);
+
+  const pauseAutoScroll = useCallback(() => {
+    if (autoScrollTimer.current) {
+      clearInterval(autoScrollTimer.current);
+      autoScrollTimer.current = null;
+    }
+    
+    if (userInteractionTimer.current) {
+      clearTimeout(userInteractionTimer.current);
+    }
+    
+    userInteractionTimer.current = setTimeout(() => {
+      if (autoScrollEnabled) {
+        startAutoScroll();
+      }
+    }, 5000);
+  }, [autoScrollEnabled, startAutoScroll]);
+
+  useEffect(() => {
+    if (autoScrollEnabled) {
+      startAutoScroll();
+    }
+    
+    return () => {
+      if (autoScrollTimer.current) {
+        clearInterval(autoScrollTimer.current);
+      }
+      if (userInteractionTimer.current) {
+        clearTimeout(userInteractionTimer.current);
+      }
+    };
+  }, [autoScrollEnabled, startAutoScroll]);
+
+  const handleScrollBeginDrag = useCallback(() => {
+    pauseAutoScroll();
+  }, [pauseAutoScroll]);
 
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
 
@@ -247,6 +310,7 @@ export default function FeedScreen() {
         </View>
 
         <FlatList
+          ref={flatListRef}
           data={sortedPoems}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
@@ -258,6 +322,8 @@ export default function FeedScreen() {
           onViewableItemsChanged={onViewableItemsChangedRef.current}
           viewabilityConfig={viewabilityConfig}
           getItemLayout={getItemLayout}
+          onScrollBeginDrag={handleScrollBeginDrag}
+          onMomentumScrollEnd={pauseAutoScroll}
         />
       </SafeAreaView>
 
