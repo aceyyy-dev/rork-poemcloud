@@ -8,7 +8,7 @@ import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { PurchasesProvider } from "@/contexts/PurchasesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TTSProvider } from "@/contexts/TTSContext";
-import { trpc, trpcClient } from "@/lib/trpc";
+
 
 SplashScreen.preventAutoHideAsync();
 
@@ -96,8 +96,7 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider>
             <PurchasesProvider>
@@ -111,7 +110,6 @@ export default function RootLayout() {
             </PurchasesProvider>
           </ThemeProvider>
         </GestureHandlerRootView>
-      </QueryClientProvider>
-    </trpc.Provider>
+    </QueryClientProvider>
   );
 }

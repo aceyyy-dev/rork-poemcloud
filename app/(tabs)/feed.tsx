@@ -28,7 +28,7 @@ import ListenPremiumModal from '@/components/ListenPremiumModal';
 import * as Haptics from 'expo-haptics';
 import { useTTS } from '@/contexts/TTSContext';
 import PoemShareCard from '@/components/PoemShareCard';
-import { trpc } from '@/lib/trpc';
+
 
 const { width, height } = Dimensions.get('window');
 const CARD_PADDING = 20;
@@ -111,28 +111,7 @@ export default function FeedScreen() {
     setShowLanguagePicker(true);
   };
 
-  const translateMutation = trpc.translate.translatePoem.useMutation({
-    onSuccess: (data, variables) => {
-      if (selectedPoemForTranslate) {
-        const cacheKey = `${selectedPoemForTranslate}-${variables.target}`;
-        setTranslationCache(prev => ({ ...prev, [cacheKey]: data.translatedText }));
-        setTranslatedPoems(prev => ({
-          ...prev,
-          [selectedPoemForTranslate]: {
-            language: SUPPORTED_LANGUAGES.find(l => l.code === variables.target)?.name || variables.target,
-            text: data.translatedText,
-          },
-        }));
-        setShowTranslation(prev => ({ ...prev, [selectedPoemForTranslate]: true }));
-        setTranslationError(null);
-        console.log('[Translation] Success:', variables.target);
-      }
-    },
-    onError: (error) => {
-      console.error('[Translation] Error:', error);
-      setTranslationError('Translation unavailable right now. Please try again.');
-    },
-  });
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const handleSelectLanguage = (languageName: string, languageCode: string) => {
     if (!selectedPoemForTranslate) return;
@@ -159,12 +138,8 @@ export default function FeedScreen() {
       return;
     }
 
-    console.log('[Translation] Requesting translation to:', languageName, languageCode);
-    translateMutation.mutate({
-      text: poem.text,
-      target: languageCode,
-      source: 'en',
-    });
+    console.log('[Translation] Translation feature not available');
+    setTranslationError('Translation feature is currently unavailable.');
     setSelectedPoemForTranslate(null);
   };
 
@@ -322,7 +297,7 @@ export default function FeedScreen() {
             </View>
 
             <ScrollView style={styles.languageList} showsVerticalScrollIndicator={false}>
-              {translateMutation.isPending && (
+              {isTranslating && (
                 <View style={styles.loadingContainer}>
                   <Text style={[styles.loadingText, { color: colors.textMuted }]}>Translating...</Text>
                 </View>
@@ -332,9 +307,9 @@ export default function FeedScreen() {
                   key={language.code}
                   style={[styles.languageItem, { borderBottomColor: colors.borderLight }]}
                   onPress={() => handleSelectLanguage(language.name, language.code)}
-                  disabled={translateMutation.isPending}
+                  disabled={isTranslating}
                 >
-                  <Text style={[styles.languageText, { color: colors.text, opacity: translateMutation.isPending ? 0.5 : 1 }]}>{language.name}</Text>
+                  <Text style={[styles.languageText, { color: colors.text, opacity: isTranslating ? 0.5 : 1 }]}>{language.name}</Text>
                   <Check size={20} color={colors.accent} style={{ opacity: 0 }} />
                 </TouchableOpacity>
               ))}

@@ -29,7 +29,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
 import { getPoemById } from '@/mocks/poems';
-import { trpc } from '@/lib/trpc';
+
 import PremiumModal from '@/components/PremiumModal';
 import ListenPremiumModal from '@/components/ListenPremiumModal';
 import * as Haptics from 'expo-haptics';
@@ -143,21 +143,7 @@ export default function PoemDetailScreen() {
     setShowLanguagePicker(true);
   };
 
-  const translateMutation = trpc.translate.translatePoem.useMutation({
-    onSuccess: (data, variables) => {
-      const cacheKey = `${poem?.id}-${variables.target}`;
-      setTranslationCache(prev => ({ ...prev, [cacheKey]: data.translatedText }));
-      setTranslatedText(data.translatedText);
-      setShowTranslation(true);
-      setTranslationError(null);
-      console.log('[Translation] Success:', variables.target);
-    },
-    onError: (error) => {
-      console.error('[Translation] Error:', error);
-      setTranslationError('Translation unavailable right now. Please try again.');
-      setShowTranslation(false);
-    },
-  });
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const handleSelectLanguage = (languageName: string, languageCode: string) => {
     if (!poem) return;
@@ -184,12 +170,8 @@ export default function PoemDetailScreen() {
       return;
     }
 
-    console.log('[Translation] Requesting translation to:', languageName, languageCode);
-    translateMutation.mutate({
-      text: poem.text,
-      target: languageCode,
-      source: 'en',
-    });
+    console.log('[Translation] Translation feature not available');
+    setTranslationError('Translation feature is currently unavailable.');
   };
 
   const handleListen = () => {
@@ -426,7 +408,7 @@ export default function PoemDetailScreen() {
             </View>
 
             <ScrollView style={styles.languageList} showsVerticalScrollIndicator={false}>
-              {translateMutation.isPending && (
+              {isTranslating && (
                 <View style={styles.loadingContainer}>
                   <Text style={[styles.loadingText, { color: colors.textMuted }]}>Translating...</Text>
                 </View>
@@ -436,9 +418,9 @@ export default function PoemDetailScreen() {
                   key={language.code}
                   style={[styles.languageItem, { borderBottomColor: colors.borderLight }]}
                   onPress={() => handleSelectLanguage(language.name, language.code)}
-                  disabled={translateMutation.isPending}
+                  disabled={isTranslating}
                 >
-                  <Text style={[styles.languageText, { color: colors.text, opacity: translateMutation.isPending ? 0.5 : 1 }]}>{language.name}</Text>
+                  <Text style={[styles.languageText, { color: colors.text, opacity: isTranslating ? 0.5 : 1 }]}>{language.name}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
