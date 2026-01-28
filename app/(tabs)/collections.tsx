@@ -112,41 +112,43 @@ export default function CollectionsScreen() {
     });
 
     return (
-      <Animated.View
-        style={[
-          styles.collectionCardWrapper,
-          {
-            width: cardWidth,
-            height: cardHeight,
-            transform: [{ scale }],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.collectionCard}
-          onPress={() => handleCollectionPress(collection)}
-          activeOpacity={0.8}
+      <View style={styles.cardContainer}>
+        <Animated.View
+          style={[
+            styles.collectionCardWrapper,
+            {
+              width: cardWidth,
+              height: cardHeight,
+              transform: [{ scale }],
+            },
+          ]}
         >
-          <LinearGradient
-            colors={collection.coverGradient ? [...collection.coverGradient] : [colors.accent, colors.primary]}
-            style={styles.collectionGradient}
-          />
-          <View style={styles.collectionIconContainer}>
-            <Text style={styles.collectionIcon}>{collection.coverIcon || '📖'}</Text>
-          </View>
-          {collection.isPremium && !preferences.isPremium && (
-            <View style={[styles.premiumBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
-              <Crown size={12} color={colors.accent} />
+          <TouchableOpacity
+            style={styles.collectionCard}
+            onPress={() => handleCollectionPress(collection)}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={collection.coverGradient ? [...collection.coverGradient] : [colors.accent, colors.primary]}
+              style={styles.collectionGradient}
+            />
+            <View style={styles.collectionIconContainer}>
+              <Text style={styles.collectionIcon}>{collection.coverIcon || '📖'}</Text>
             </View>
-          )}
-          <View style={styles.collectionInfo}>
-            <Text style={styles.collectionTitle} numberOfLines={2}>{collection.title}</Text>
-            <Text style={styles.collectionCount}>
-              {collection.poemCount} poems
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
+            {collection.isPremium && !preferences.isPremium && (
+              <View style={[styles.premiumBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
+                <Crown size={12} color={colors.accent} />
+              </View>
+            )}
+            <View style={styles.collectionInfo}>
+              <Text style={styles.collectionTitle} numberOfLines={2}>{collection.title}</Text>
+              <Text style={styles.collectionCount}>
+                {collection.poemCount} poems
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
     );
   };
 
@@ -540,9 +542,16 @@ const styles = StyleSheet.create({
   },
   horizontalScroll: {
     paddingLeft: PADDING_LEFT,
+    height: CARD_LARGE_HEIGHT + 20,
+    alignItems: 'center',
+  },
+  cardContainer: {
+    width: CARD_SMALL_WIDTH + CARD_GAP,
+    height: CARD_LARGE_HEIGHT + 20,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   collectionCardWrapper: {
-    marginRight: CARD_GAP,
   },
   collectionCard: {
     flex: 1,
