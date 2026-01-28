@@ -28,7 +28,7 @@ import ListenPremiumModal from '@/components/ListenPremiumModal';
 import * as Haptics from 'expo-haptics';
 import { useTTS } from '@/contexts/TTSContext';
 import PoemShareCard from '@/components/PoemShareCard';
-import { useKeepAwake } from 'expo-keep-awake';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import AddToPlaylistModal from '@/components/AddToPlaylistModal';
 
 
@@ -51,7 +51,17 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 export default function FeedScreen() {
-  useKeepAwake();
+  React.useEffect(() => {
+    if (Platform.OS === 'web') return;
+    
+    activateKeepAwakeAsync().catch((err) => {
+      console.log('[KeepAwake] Not available:', err.message);
+    });
+    
+    return () => {
+      deactivateKeepAwake();
+    };
+  }, []);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
