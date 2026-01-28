@@ -114,6 +114,7 @@ export default function AuthModal({ visible, onClose, onSuccess, initialMode = '
               contentContainerStyle={styles.content}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
+              bounces={false}
             >
               <Text style={[styles.title, { color: colors.primary }]}>
                 {mode === 'signup' ? 'Create your account' : 'Welcome back'}
@@ -266,31 +267,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
+    paddingTop: 60,
     paddingBottom: 40,
+    flexGrow: 1,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
     letterSpacing: -0.5,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 22,
+    marginBottom: 28,
+    lineHeight: 20,
+    paddingHorizontal: 16,
   },
   socialButtons: {
-    gap: 12,
-    marginBottom: 24,
+    gap: 10,
+    marginBottom: 20,
   },
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 12,
     gap: 10,
   },
@@ -314,7 +318,7 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
     gap: 12,
   },
   dividerLine: {
@@ -325,15 +329,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   form: {
-    gap: 12,
-    marginBottom: 20,
+    gap: 10,
+    marginBottom: 16,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 12,
     backgroundColor: 'rgba(0,0,0,0.03)',
   },
@@ -342,10 +346,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   primaryButton: {
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 6,
   },
   primaryButtonText: {
     fontSize: 17,
@@ -353,14 +357,14 @@ const styles = StyleSheet.create({
   },
   switchMode: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   switchModeText: {
     fontSize: 15,
   },
   guestButton: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   guestButtonText: {
     fontSize: 14,
