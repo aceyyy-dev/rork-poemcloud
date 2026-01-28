@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Animated,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -22,6 +26,14 @@ import PremiumModal from '@/components/PremiumModal';
 import CreatePlaylistModal from '@/components/CreatePlaylistModal';
 
 type Tab = 'curated' | 'saved' | 'playlists';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_LARGE_WIDTH = 180;
+const CARD_SMALL_WIDTH = 140;
+const CARD_LARGE_HEIGHT = 200;
+const CARD_SMALL_HEIGHT = 160;
+const CARD_GAP = 12;
+const PADDING_LEFT = 20;
 
 export default function CollectionsScreen() {
   const router = useRouter();
@@ -74,36 +86,98 @@ export default function CollectionsScreen() {
     return country?.flag || '🌍';
   };
 
-  const renderCollectionCard = (collection: Collection, isLarge: boolean = false) => (
-    <TouchableOpacity
-      key={collection.id}
-      style={[
-        styles.collectionCard,
-        isLarge ? styles.collectionCardLarge : styles.collectionCardSmall,
-      ]}
-      onPress={() => handleCollectionPress(collection)}
-      activeOpacity={0.8}
-    >
-      <LinearGradient
-        colors={collection.coverGradient ? [...collection.coverGradient] : [colors.accent, colors.primary]}
-        style={styles.collectionGradient}
-      />
-      <View style={styles.collectionIconContainer}>
-        <Text style={styles.collectionIcon}>{collection.coverIcon || '📖'}</Text>
-      </View>
-      {collection.isPremium && !preferences.isPremium && (
-        <View style={[styles.premiumBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
-          <Crown size={12} color={colors.accent} />
-        </View>
-      )}
-      <View style={styles.collectionInfo}>
-        <Text style={styles.collectionTitle} numberOfLines={2}>{collection.title}</Text>
-        <Text style={styles.collectionCount}>
-          {collection.poemCount} poems
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const AnimatedCollectionCard = ({ collection, index, scrollX }: { collection: Collection; index: number; scrollX: Animated.Value }) => {
+    const inputRange = [
+      (index - 1) * (CARD_SMALL_WIDTH + CARD_GAP),
+      index * (CARD_SMALL_WIDTH + CARD_GAP),
+      (index + 1) * (CARD_SMALL_WIDTH + CARD_GAP),
+    ];
+
+    const scale = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.85, 1, 0.85],
+      extrapolate: 'clamp',
+    });
+
+    const cardWidth = scrollX.interpolate({
+      inputRange,
+      outputRange: [CARD_SMALL_WIDTH, CARD_LARGE_WIDTH, CARD_SMALL_WIDTH],
+      extrapolate: 'clamp',
+    });
+
+    const cardHeight = scrollX.interpolate({
+      inputRange,
+      outputRange: [CARD_SMALL_HEIGHT, CARD_LARGE_HEIGHT, CARD_SMALL_HEIGHT],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.collectionCardWrapper,
+          {
+            width: cardWidth,
+            height: cardHeight,
+            transform: [{ scale }],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.collectionCard}
+          onPress={() => handleCollectionPress(collection)}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={collection.coverGradient ? [...collection.coverGradient] : [colors.accent, colors.primary]}
+            style={styles.collectionGradient}
+          />
+          <View style={styles.collectionIconContainer}>
+            <Text style={styles.collectionIcon}>{collection.coverIcon || '📖'}</Text>
+          </View>
+          {collection.isPremium && !preferences.isPremium && (
+            <View style={[styles.premiumBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
+              <Crown size={12} color={colors.accent} />
+            </View>
+          )}
+          <View style={styles.collectionInfo}>
+            <Text style={styles.collectionTitle} numberOfLines={2}>{collection.title}</Text>
+            <Text style={styles.collectionCount}>
+              {collection.poemCount} poems
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
+  const AnimatedHorizontalList = ({ collections }: { collections: Collection[] }) => {
+    const scrollX = useRef(new Animated.Value(0)).current;
+
+    return (
+      <Animated.ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.horizontalScroll}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+        decelerationRate="fast"
+        snapToInterval={CARD_SMALL_WIDTH + CARD_GAP}
+        snapToAlignment="start"
+      >
+        {collections.map((collection, index) => (
+          <AnimatedCollectionCard
+            key={collection.id}
+            collection={collection}
+            index={index}
+            scrollX={scrollX}
+          />
+        ))}
+      </Animated.ScrollView>
+    );
+  };
 
   const renderPlaylistCard = (playlist: Playlist) => (
     <TouchableOpacity
@@ -258,15 +332,7 @@ export default function CollectionsScreen() {
                       {category.title}
                     </Text>
                   </View>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.horizontalScroll}
-                  >
-                    {category.collections.map((collection, index) => (
-                      renderCollectionCard(collection, index === 0)
-                    ))}
-                  </ScrollView>
+                  <AnimatedHorizontalList collections={category.collections} />
                 </View>
               ))}
             </>
@@ -476,19 +542,15 @@ const styles = StyleSheet.create({
     paddingRight: 8,
     gap: 12,
   },
+  collectionCardWrapper: {
+    marginRight: CARD_GAP,
+  },
   collectionCard: {
+    flex: 1,
     borderRadius: 16,
     overflow: 'hidden',
     position: 'relative',
     justifyContent: 'space-between',
-  },
-  collectionCardLarge: {
-    width: 180,
-    height: 200,
-  },
-  collectionCardSmall: {
-    width: 140,
-    height: 160,
   },
   collectionGradient: {
     ...StyleSheet.absoluteFillObject,
