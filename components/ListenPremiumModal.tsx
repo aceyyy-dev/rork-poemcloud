@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Headphones, X } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { triggerHaptic } from '@/utils/haptics';
 
 interface Props {
   visible: boolean;
@@ -72,7 +73,7 @@ export default function ListenPremiumModal({ visible, onClose, onUpgrade }: Prop
       >
         <View style={[styles.handle, { backgroundColor: colors.border }]} />
         
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => { triggerHaptic('light'); onClose(); }}>
           <X size={24} color={colors.textMuted} />
         </TouchableOpacity>
 
@@ -91,7 +92,7 @@ export default function ListenPremiumModal({ visible, onClose, onUpgrade }: Prop
 
           <TouchableOpacity
             style={[styles.upgradeButton, { backgroundColor: colors.primary }]}
-            onPress={onUpgrade}
+            onPress={() => { triggerHaptic('medium'); onUpgrade(); }}
             activeOpacity={0.8}
           >
             <Text style={[styles.upgradeButtonText, { color: colors.background }]}>

@@ -3,17 +3,22 @@ import { Home, Sparkles, Search, BookOpen, User } from "lucide-react-native";
 import React from "react";
 import { Platform } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useUser } from "@/contexts/UserContext";
+import { triggerHaptic } from "@/utils/haptics";
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const { preferences } = useUser();
   const router = useRouter();
+
+  const hideTabBar = !preferences.hasCompletedOnboarding;
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.tabBar.active,
         tabBarInactiveTintColor: colors.tabBar.inactive,
-        tabBarStyle: {
+        tabBarStyle: hideTabBar ? { display: 'none' } : {
           backgroundColor: colors.tabBar.background,
           borderTopColor: colors.borderLight,
           borderTopWidth: 1,
@@ -27,6 +32,11 @@ export default function TabLayout() {
         },
         headerShown: false,
       }}
+      screenListeners={{
+        tabPress: () => {
+          triggerHaptic('light');
+        },
+      }}
     >
       <Tabs.Screen
         name="index"
@@ -35,6 +45,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Home size={24} color={color} strokeWidth={focused ? 2 : 1.5} />
           ),
+          href: hideTabBar ? null : '/(tabs)',
         }}
       />
       <Tabs.Screen

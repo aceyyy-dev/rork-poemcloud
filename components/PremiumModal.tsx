@@ -14,6 +14,7 @@ import { PurchasesPackage } from 'react-native-purchases';
 import { useTheme } from '@/contexts/ThemeContext';
 import { usePurchases } from '@/contexts/PurchasesContext';
 import SubscriptionSuccessModal from '@/components/SubscriptionSuccessModal';
+import { triggerHaptic } from '@/utils/haptics';
 
 interface Props {
   visible: boolean;
@@ -93,6 +94,7 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
   const savingsInfo = calculateSavings();
 
   const handleSubscribe = async () => {
+    triggerHaptic('medium');
     if (!selectedPackage) {
       console.log('[PremiumModal] No package available');
       onSubscribe();
@@ -103,12 +105,14 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
       console.log('[PremiumModal] Starting purchase...');
       await purchasePackage(selectedPackage);
       console.log('[PremiumModal] Purchase successful');
+      triggerHaptic('success');
     } catch (error: any) {
       console.log('[PremiumModal] Purchase error:', error);
       if (error.userCancelled) {
         console.log('[PremiumModal] Purchase cancelled by user');
       } else {
         console.error('[PremiumModal] Purchase failed with error:', error);
+        triggerHaptic('error');
       }
     }
   };
@@ -147,7 +151,7 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
       >
         <View style={[styles.handle, { backgroundColor: colors.border }]} />
         
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => { triggerHaptic('light'); onClose(); }}>
           <X size={24} color={colors.textMuted} />
         </TouchableOpacity>
 
@@ -183,7 +187,7 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
                 backgroundColor: selectedPlan === 'annual' ? colors.premiumLight : 'transparent',
               },
             ]}
-            onPress={() => setSelectedPlan('annual')}
+            onPress={() => { triggerHaptic('light'); setSelectedPlan('annual'); }}
             activeOpacity={0.7}
           >
             {savingsInfo && (
@@ -219,7 +223,7 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
                 backgroundColor: selectedPlan === 'monthly' ? colors.premiumLight : 'transparent',
               },
             ]}
-            onPress={() => setSelectedPlan('monthly')}
+            onPress={() => { triggerHaptic('light'); setSelectedPlan('monthly'); }}
             activeOpacity={0.7}
           >
             <View style={styles.planDetails}>

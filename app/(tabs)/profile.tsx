@@ -26,6 +26,7 @@ import { poems } from '@/mocks/poems';
 import PremiumModal from '@/components/PremiumModal';
 import AuthModal from '@/components/AuthModal';
 import DataSyncModal from '@/components/DataSyncModal';
+import { triggerHaptic } from '@/utils/haptics';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -74,7 +75,7 @@ export default function ProfileScreen() {
           <Text style={[styles.headerTitle, { color: colors.primary }]}>Profile</Text>
           <TouchableOpacity
             style={[styles.settingsButton, { backgroundColor: colors.surface }]}
-            onPress={() => router.push('/settings')}
+            onPress={() => { triggerHaptic('light'); router.push('/settings'); }}
           >
             <Settings size={22} color={colors.primary} strokeWidth={1.5} />
           </TouchableOpacity>
@@ -95,6 +96,7 @@ export default function ProfileScreen() {
                 <TouchableOpacity
                   style={[styles.authCardButton, styles.authCardButtonPrimary, { backgroundColor: colors.primary }]}
                   onPress={() => {
+                    triggerHaptic('light');
                     setAuthMode('signup');
                     setShowAuthModal(true);
                   }}
@@ -104,6 +106,7 @@ export default function ProfileScreen() {
                 <TouchableOpacity
                   style={[styles.authCardButton, { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }]}
                   onPress={() => {
+                    triggerHaptic('light');
                     setAuthMode('login');
                     setShowAuthModal(true);
                   }}
@@ -117,7 +120,7 @@ export default function ProfileScreen() {
           {!preferences.isPremium ? (
             <TouchableOpacity
               style={styles.premiumBanner}
-              onPress={() => setShowPremiumModal(true)}
+              onPress={() => { triggerHaptic('medium'); setShowPremiumModal(true); }}
               activeOpacity={0.9}
             >
               <LinearGradient

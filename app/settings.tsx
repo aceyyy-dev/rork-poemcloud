@@ -36,6 +36,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { countries } from '@/mocks/countries';
 import { Mood } from '@/types';
 import PremiumModal from '@/components/PremiumModal';
+import { triggerHaptic } from '@/utils/haptics';
 
 const MOODS: Mood[] = ['calm', 'sad', 'love', 'hope', 'melancholy', 'healing', 'longing', 'joy', 'reflection'];
 const MIN_MOODS = 3;
@@ -55,6 +56,7 @@ export default function SettingsScreen() {
   const [dailyNotification, setDailyNotification] = useState(true);
 
   const toggleMood = (mood: Mood) => {
+    triggerHaptic('light');
     if (selectedMoods.includes(mood)) {
       if (selectedMoods.length > MIN_MOODS) {
         setSelectedMoods(selectedMoods.filter(m => m !== mood));
@@ -65,6 +67,7 @@ export default function SettingsScreen() {
   };
 
   const toggleCountry = (code: string) => {
+    triggerHaptic('light');
     if (code === 'ALL') {
       setSelectedCountries(['ALL']);
     } else {
@@ -116,7 +119,7 @@ export default function SettingsScreen() {
           <Text style={[styles.headerTitle, { color: colors.primary }]}>Settings</Text>
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: colors.surface }]}
-            onPress={() => router.back()}
+            onPress={() => { triggerHaptic('light'); router.back(); }}
           >
             <X size={22} color={colors.primary} />
           </TouchableOpacity>
@@ -143,7 +146,7 @@ export default function SettingsScreen() {
                         { backgroundColor: colors.surfaceSecondary, borderColor: colors.border },
                         isSelected && { borderColor: colors.accent, backgroundColor: colors.accentLight },
                       ]}
-                      onPress={() => setTheme(option.value)}
+                      onPress={() => { triggerHaptic('light'); setTheme(option.value); }}
                     >
                       <Icon
                         size={20}
@@ -253,7 +256,7 @@ export default function SettingsScreen() {
               {!preferences.isPremium && (
                 <TouchableOpacity
                   style={[styles.upgradeButton, { backgroundColor: colors.accent }]}
-                  onPress={() => setShowPremiumModal(true)}
+                  onPress={() => { triggerHaptic('medium'); setShowPremiumModal(true); }}
                 >
                   <Text style={[styles.upgradeButtonText, { color: colors.textWhite }]}>
                     Upgrade to PoemCloud+

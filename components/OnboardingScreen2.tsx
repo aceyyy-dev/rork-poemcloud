@@ -13,6 +13,7 @@ import { Check, ChevronLeft } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Mood } from '@/types';
 import { countries } from '@/mocks/countries';
+import { triggerHaptic } from '@/utils/haptics';
 
 interface Props {
   onNext: (preferences: {
@@ -54,6 +55,7 @@ export default function OnboardingScreen2({ onNext, onBack }: Props) {
   }, []);
 
   const toggleMood = (mood: Mood) => {
+    triggerHaptic('light');
     if (selectedMoods.includes(mood)) {
       setSelectedMoods(prev => prev.filter(m => m !== mood));
     } else if (selectedMoods.length < MAX_MOODS) {
@@ -62,6 +64,7 @@ export default function OnboardingScreen2({ onNext, onBack }: Props) {
   };
 
   const toggleCountry = (code: string) => {
+    triggerHaptic('light');
     if (selectAllCountries) {
       setSelectAllCountries(false);
       setSelectedCountries([code]);
@@ -73,11 +76,13 @@ export default function OnboardingScreen2({ onNext, onBack }: Props) {
   };
 
   const handleSelectAll = () => {
+    triggerHaptic('medium');
     setSelectAllCountries(true);
     setSelectedCountries([]);
   };
 
   const handleContinue = () => {
+    triggerHaptic('medium');
     onNext({
       moods: selectedMoods,
       countries: selectAllCountries ? ['ALL'] : selectedCountries,
@@ -96,7 +101,7 @@ export default function OnboardingScreen2({ onNext, onBack }: Props) {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <TouchableOpacity onPress={() => { triggerHaptic('light'); onBack(); }} style={styles.backButton}>
               <ChevronLeft size={24} color={colors.primary} />
             </TouchableOpacity>
             <View style={styles.progressContainer}>

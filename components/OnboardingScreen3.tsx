@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Headphones, Languages, Heart, ChevronLeft } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { triggerHaptic } from '@/utils/haptics';
 
 const { width } = Dimensions.get('window');
 
@@ -94,7 +95,7 @@ export default function OnboardingScreen3({ onNext, onBack }: Props) {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <TouchableOpacity onPress={() => { triggerHaptic('light'); onBack(); }} style={styles.backButton}>
               <ChevronLeft size={24} color={colors.primary} />
             </TouchableOpacity>
             <View style={styles.progressContainer}>
@@ -155,7 +156,7 @@ export default function OnboardingScreen3({ onNext, onBack }: Props) {
           <View style={styles.footer}>
             <TouchableOpacity
               style={[styles.button, { backgroundColor: colors.primary }]}
-              onPress={onNext}
+              onPress={() => { triggerHaptic('medium'); onNext(); }}
               activeOpacity={0.8}
             >
               <Text style={[styles.buttonText, { color: colors.background }]}>Continue</Text>

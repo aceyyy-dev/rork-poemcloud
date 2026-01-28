@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Cloud } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { triggerHaptic } from '@/utils/haptics';
 
 const { width, height } = Dimensions.get('window');
 
@@ -169,7 +170,10 @@ export default function OnboardingScreen1({ onNext }: Props) {
           <Animated.View style={[styles.buttonContainer, { opacity: buttonFade }]}>
             <TouchableOpacity
               style={[styles.button, { backgroundColor: colors.primary }]}
-              onPress={onNext}
+              onPress={() => {
+                triggerHaptic('medium');
+                onNext();
+              }}
               activeOpacity={0.8}
             >
               <Text style={[styles.buttonText, { color: colors.background }]}>Begin</Text>

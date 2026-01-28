@@ -14,6 +14,7 @@ import { Check, Crown, ChevronLeft } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { usePurchases } from '@/contexts/PurchasesContext';
 import SubscriptionSuccessModal from '@/components/SubscriptionSuccessModal';
+import { triggerHaptic } from '@/utils/haptics';
 
 interface Props {
   onSubscribe: () => void;
@@ -61,6 +62,7 @@ export default function OnboardingScreen4({ onSubscribe, onSkip, onBack }: Props
   ];
 
   const handleSubscribe = async () => {
+    triggerHaptic('medium');
     const pkg = selectedPlan === 'yearly' ? annualPackage : monthlyPackage;
     if (!pkg) {
       console.log('[Onboarding] No package available, completing onboarding');
@@ -78,6 +80,7 @@ export default function OnboardingScreen4({ onSubscribe, onSkip, onBack }: Props
         return;
       } else {
         console.error('[Onboarding] Purchase failed with error:', error);
+        triggerHaptic('error');
       }
     }
   };
@@ -103,7 +106,7 @@ export default function OnboardingScreen4({ onSubscribe, onSkip, onBack }: Props
           ]}
         >
           <View style={styles.header}>
-            <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <TouchableOpacity onPress={() => { triggerHaptic('light'); onBack(); }} style={styles.backButton}>
               <ChevronLeft size={24} color={colors.primary} />
             </TouchableOpacity>
             <View style={styles.progressContainer}>
@@ -150,7 +153,7 @@ export default function OnboardingScreen4({ onSubscribe, onSkip, onBack }: Props
                   { backgroundColor: colors.surface, borderColor: colors.border },
                   selectedPlan === 'yearly' && { borderColor: colors.primary, backgroundColor: colors.surfaceSecondary },
                 ]}
-                onPress={() => setSelectedPlan('yearly')}
+                onPress={() => { triggerHaptic('light'); setSelectedPlan('yearly'); }}
                 activeOpacity={0.8}
               >
                 <View style={[styles.planBadge, { backgroundColor: colors.accent }]}>
@@ -180,7 +183,7 @@ export default function OnboardingScreen4({ onSubscribe, onSkip, onBack }: Props
                   { backgroundColor: colors.surface, borderColor: colors.border },
                   selectedPlan === 'monthly' && { borderColor: colors.primary, backgroundColor: colors.surfaceSecondary },
                 ]}
-                onPress={() => setSelectedPlan('monthly')}
+                onPress={() => { triggerHaptic('light'); setSelectedPlan('monthly'); }}
                 activeOpacity={0.8}
               >
                 <View style={styles.planContent}>
@@ -225,7 +228,7 @@ export default function OnboardingScreen4({ onSubscribe, onSkip, onBack }: Props
 
             <TouchableOpacity
               style={styles.skipButton}
-              onPress={onSkip}
+              onPress={() => { triggerHaptic('light'); onSkip(); }}
               activeOpacity={0.7}
             >
               <Text style={[styles.skipButtonText, { color: colors.text }]}>

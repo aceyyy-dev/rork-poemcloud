@@ -24,6 +24,7 @@ import { countries } from '@/mocks/countries';
 import { Collection, Playlist } from '@/types';
 import PremiumModal from '@/components/PremiumModal';
 import CreatePlaylistModal from '@/components/CreatePlaylistModal';
+import { triggerHaptic } from '@/utils/haptics';
 
 type Tab = 'curated' | 'saved' | 'playlists';
 
@@ -59,6 +60,7 @@ export default function CollectionsScreen() {
   };
 
   const handleCreatePlaylist = () => {
+    triggerHaptic('light');
     if (!preferences.isPremium) {
       setShowPremiumModal(true);
       return;
@@ -243,7 +245,7 @@ export default function CollectionsScreen() {
               { backgroundColor: colors.surface, borderColor: colors.border },
               activeTab === 'curated' && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
-            onPress={() => setActiveTab('curated')}
+            onPress={() => { triggerHaptic('light'); setActiveTab('curated'); }}
           >
             <Text
               style={[
@@ -261,7 +263,7 @@ export default function CollectionsScreen() {
               { backgroundColor: colors.surface, borderColor: colors.border },
               activeTab === 'saved' && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
-            onPress={() => setActiveTab('saved')}
+            onPress={() => { triggerHaptic('light'); setActiveTab('saved'); }}
           >
             <View style={styles.tabWithBadge}>
               <Text
@@ -298,7 +300,7 @@ export default function CollectionsScreen() {
               { backgroundColor: colors.surface, borderColor: colors.border },
               activeTab === 'playlists' && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
-            onPress={() => setActiveTab('playlists')}
+            onPress={() => { triggerHaptic('light'); setActiveTab('playlists'); }}
           >
             <View style={styles.tabWithBadge}>
               <Text
@@ -351,7 +353,7 @@ export default function CollectionsScreen() {
                   </View>
                   <TouchableOpacity
                     style={[styles.upgradeButton, { backgroundColor: colors.accent }]}
-                    onPress={() => setShowPremiumModal(true)}
+                    onPress={() => { triggerHaptic('medium'); setShowPremiumModal(true); }}
                   >
                     <Crown size={14} color={colors.textWhite} />
                     <Text style={[styles.upgradeText, { color: colors.textWhite }]}>Unlimited</Text>
@@ -410,7 +412,7 @@ export default function CollectionsScreen() {
                   </View>
                   <TouchableOpacity
                     style={[styles.unlockButton, { backgroundColor: colors.accent }]}
-                    onPress={() => setShowPremiumModal(true)}
+                    onPress={() => { triggerHaptic('medium'); setShowPremiumModal(true); }}
                   >
                     <Text style={[styles.unlockButtonText, { color: colors.textWhite }]}>
                       Unlock

@@ -10,6 +10,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { Crown, Sparkles } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { triggerHaptic } from '@/utils/haptics';
 
 const { width, height } = Dimensions.get('window');
 
@@ -35,6 +36,7 @@ export default function SubscriptionSuccessModal({ visible, onComplete }: Props)
 
   useEffect(() => {
     if (visible) {
+      triggerHaptic('success');
       animationsRef.current = [];
 
       const mainAnim = Animated.sequence([
