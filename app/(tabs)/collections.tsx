@@ -152,12 +152,13 @@ export default function CollectionsScreen() {
 
   const AnimatedHorizontalList = ({ collections }: { collections: Collection[] }) => {
     const scrollX = useRef(new Animated.Value(0)).current;
+    const lastCardPadding = SCREEN_WIDTH - CARD_LARGE_WIDTH - PADDING_LEFT - CARD_GAP;
 
     return (
       <Animated.ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.horizontalScroll}
+        contentContainerStyle={[styles.horizontalScroll, { paddingRight: lastCardPadding }]}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: false }
@@ -538,9 +539,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   horizontalScroll: {
-    paddingLeft: 20,
-    paddingRight: 8,
-    gap: 12,
+    paddingLeft: PADDING_LEFT,
   },
   collectionCardWrapper: {
     marginRight: CARD_GAP,
