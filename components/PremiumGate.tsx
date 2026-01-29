@@ -80,7 +80,7 @@ export function PremiumActionButton({ feature, onAction, children }: PremiumActi
 
   return (
     <>
-      {React.cloneElement(children as React.ReactElement, { onPress: handlePress })}
+      {React.cloneElement(children as React.ReactElement<{ onPress?: () => void }>, { onPress: handlePress })}
       <PremiumGateModal />
     </>
   );
