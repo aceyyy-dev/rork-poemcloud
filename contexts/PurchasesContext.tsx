@@ -201,10 +201,12 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
 
   const hideSuccessModal = useCallback(() => {
     setShowSuccessModal(false);
-    if (onSuccessCallbackRef.current) {
-      onSuccessCallbackRef.current();
-      onSuccessCallbackRef.current = null;
-    }
+    setTimeout(() => {
+      if (onSuccessCallbackRef.current) {
+        onSuccessCallbackRef.current();
+        onSuccessCallbackRef.current = null;
+      }
+    }, 100);
   }, []);
 
   const setOnSuccessCallback = useCallback((callback: () => void) => {

@@ -78,18 +78,20 @@ export default function SubscriptionSuccessModal({ visible, onComplete }: Props)
         Animated.parallel([
           Animated.timing(fadeAnim, {
             toValue: 0,
-            duration: 200,
+            duration: 300,
             useNativeDriver: true,
           }),
           Animated.timing(scaleAnim, {
-            toValue: 0.9,
-            duration: 200,
+            toValue: 0.95,
+            duration: 300,
             useNativeDriver: true,
           }),
         ]).start(() => {
-          onComplete();
+          setTimeout(() => {
+            onComplete();
+          }, 50);
         });
-      }, 1800);
+      }, 3000);
 
       return () => {
         if (timerRef.current) {
@@ -114,7 +116,7 @@ export default function SubscriptionSuccessModal({ visible, onComplete }: Props)
   return (
     <Modal visible={visible} transparent animationType="none">
       {Platform.OS === 'web' ? (
-        <View style={[styles.webBlur, { backgroundColor: 'rgba(0,0,0,0.4)' }]}>
+        <View style={[styles.webBlur, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
           <Animated.View
             style={[
               styles.container,
@@ -150,13 +152,13 @@ export default function SubscriptionSuccessModal({ visible, onComplete }: Props)
                 Welcome to PoemCloud+
               </Text>
               <Text style={[styles.subtitle, { color: colors.textLight }]}>
-                Translations, listening, and unlimited{'\n'}saving are now unlocked.
+                Explore poetry without limits.
               </Text>
             </View>
           </Animated.View>
         </View>
       ) : (
-        <BlurView intensity={80} style={styles.blur}>
+        <BlurView intensity={100} tint="dark" style={styles.blur}>
           <Animated.View
             style={[
               styles.container,
@@ -192,7 +194,7 @@ export default function SubscriptionSuccessModal({ visible, onComplete }: Props)
                 Welcome to PoemCloud+
               </Text>
               <Text style={[styles.subtitle, { color: colors.textLight }]}>
-                Translations, listening, and unlimited{'\n'}saving are now unlocked.
+                Explore poetry without limits.
               </Text>
             </View>
           </Animated.View>
