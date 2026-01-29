@@ -11,7 +11,9 @@ import { TTSProvider } from "@/contexts/TTSContext";
 import { PlaylistProvider } from "@/contexts/PlaylistContext";
 
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // Ignore error on web or when splash screen is not available
+});
 
 const queryClient = new QueryClient();
 
@@ -101,7 +103,9 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
-    SplashScreen.hideAsync();
+    SplashScreen.hideAsync().catch(() => {
+      // Ignore error on web or when splash screen is not available
+    });
   }, []);
 
   return (
