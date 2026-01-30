@@ -156,10 +156,34 @@ export default function CollectionsScreen() {
 
   const AnimatedHorizontalList = ({ collections }: { collections: Collection[] }) => {
     const scrollX = useRef(new Animated.Value(0)).current;
+    const scrollViewRef = useRef<any>(null);
+    const currentIndexRef = useRef(0);
     const lastCardPadding = SCREEN_WIDTH - CARD_LARGE_WIDTH - PADDING_LEFT - CARD_GAP;
+    const cardInterval = CARD_SMALL_WIDTH + CARD_GAP;
+
+    const handleScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const nearestIndex = Math.round(offsetX / cardInterval);
+      const clampedIndex = Math.max(
+        0,
+        Math.min(
+          collections.length - 1,
+          Math.max(currentIndexRef.current - 1, Math.min(currentIndexRef.current + 1, nearestIndex))
+        )
+      );
+
+      if (clampedIndex !== nearestIndex && scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({
+          x: clampedIndex * cardInterval,
+          animated: true,
+        });
+      }
+      currentIndexRef.current = clampedIndex;
+    };
 
     return (
       <Animated.ScrollView
+        ref={scrollViewRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={[styles.horizontalScroll, { paddingRight: lastCardPadding }]}
@@ -167,10 +191,12 @@ export default function CollectionsScreen() {
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: false }
         )}
+        onMomentumScrollEnd={handleScrollEnd}
         scrollEventThrottle={16}
         decelerationRate="fast"
-        snapToInterval={CARD_SMALL_WIDTH + CARD_GAP}
+        snapToInterval={cardInterval}
         snapToAlignment="start"
+        disableIntervalMomentum={true}
       >
         {collections.map((collection, index) => (
           <AnimatedCollectionCard

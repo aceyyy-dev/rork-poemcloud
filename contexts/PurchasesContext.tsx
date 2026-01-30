@@ -32,12 +32,16 @@ if (apiKey) {
 
 type PurchaseResult = 'success' | 'cancelled' | 'error' | null;
 
+const SUCCESS_DEBOUNCE_MS = 2000;
+
 export const [PurchasesProvider, usePurchases] = createContextHook(() => {
   const queryClient = useQueryClient();
   const [isConfigured] = useState(!!apiKey);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastPurchaseResult, setLastPurchaseResult] = useState<PurchaseResult>(null);
   const onSuccessCallbackRef = useRef<(() => void) | null>(null);
+  const lastSuccessAtRef = useRef<number>(0);
+  const previousPremiumRef = useRef<boolean | null>(null);
 
   const customerInfoQuery = useQuery({
     queryKey: ['customerInfo'],
@@ -90,7 +94,11 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       console.log('[RevenueCat] isPremium after purchase:', isPremium);
       queryClient.setQueryData(['customerInfo'], customerInfo);
       setLastPurchaseResult('success');
-      if (isPremium) {
+      
+      const now = Date.now();
+      if (isPremium && now - lastSuccessAtRef.current > SUCCESS_DEBOUNCE_MS) {
+        lastSuccessAtRef.current = now;
+        console.log('[RevenueCat] Showing success modal (debounced)');
         setShowSuccessModal(true);
       }
     },
@@ -135,10 +143,15 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
     if (!isConfigured) return;
 
     const listener = (info: CustomerInfo) => {
-      const isPremium = info.entitlements.active[ENTITLEMENT_ID] !== undefined;
-      console.log('[RevenueCat] Customer info updated via listener');
-      console.log('[RevenueCat] isPremium (listener):', isPremium);
-      queryClient.setQueryData(['customerInfo'], info);
+      const newIsPremium = info.entitlements.active[ENTITLEMENT_ID] !== undefined;
+      const oldIsPremium = previousPremiumRef.current;
+      
+      if (oldIsPremium !== newIsPremium) {
+        console.log('[RevenueCat] Customer info updated via listener');
+        console.log('[RevenueCat] isPremium changed:', oldIsPremium, '->', newIsPremium);
+        previousPremiumRef.current = newIsPremium;
+        queryClient.setQueryData(['customerInfo'], info);
+      }
     };
 
     Purchases.addCustomerInfoUpdateListener(listener);

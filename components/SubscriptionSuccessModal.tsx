@@ -23,192 +23,152 @@ interface Props {
 export default function SubscriptionSuccessModal({ visible, onComplete }: Props) {
   const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const scaleAnim = useRef(new Animated.Value(0.98)).current;
   const checkScale = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hapticFiredRef = useRef(false);
+  const isAnimatingRef = useRef(false);
 
   useEffect(() => {
-    if (visible) {
-      triggerHaptic('success');
+    if (visible && !isAnimatingRef.current) {
+      isAnimatingRef.current = true;
+      
+      if (!hapticFiredRef.current) {
+        hapticFiredRef.current = true;
+        triggerHaptic('success');
+      }
 
       fadeAnim.setValue(0);
-      scaleAnim.setValue(0.8);
+      scaleAnim.setValue(0.98);
       checkScale.setValue(0);
-      glowAnim.setValue(0);
 
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 250,
+          duration: 220,
           useNativeDriver: true,
         }),
-        Animated.spring(scaleAnim, {
+        Animated.timing(scaleAnim, {
           toValue: 1,
-          friction: 8,
-          tension: 60,
+          duration: 220,
           useNativeDriver: true,
         }),
       ]).start(() => {
-        Animated.sequence([
-          Animated.spring(checkScale, {
-            toValue: 1,
-            friction: 5,
-            tension: 80,
-            useNativeDriver: true,
-          }),
-          Animated.loop(
-            Animated.sequence([
-              Animated.timing(glowAnim, {
-                toValue: 1,
-                duration: 1200,
-                useNativeDriver: true,
-              }),
-              Animated.timing(glowAnim, {
-                toValue: 0,
-                duration: 1200,
-                useNativeDriver: true,
-              }),
-            ])
-          ),
-        ]).start();
+        Animated.timing(checkScale, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
       });
+
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
 
       timerRef.current = setTimeout(() => {
         Animated.parallel([
           Animated.timing(fadeAnim, {
             toValue: 0,
-            duration: 300,
+            duration: 280,
             useNativeDriver: true,
           }),
           Animated.timing(scaleAnim, {
-            toValue: 0.95,
-            duration: 300,
+            toValue: 0.98,
+            duration: 280,
             useNativeDriver: true,
           }),
         ]).start(() => {
-          setTimeout(() => {
-            onComplete();
-          }, 50);
+          isAnimatingRef.current = false;
+          hapticFiredRef.current = false;
+          onComplete();
         });
-      }, 3000);
-
-      return () => {
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-        }
-      };
-    } else {
-      fadeAnim.setValue(0);
-      scaleAnim.setValue(0.8);
-      checkScale.setValue(0);
-      glowAnim.setValue(0);
+      }, 1200);
     }
-  }, [visible, fadeAnim, scaleAnim, checkScale, glowAnim, onComplete]);
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) {
+      fadeAnim.setValue(0);
+      scaleAnim.setValue(0.98);
+      checkScale.setValue(0);
+      isAnimatingRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   if (!visible) return null;
 
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.6],
-  });
+  const renderContent = () => (
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          opacity: fadeAnim,
+          transform: [{ scale: scaleAnim }],
+        },
+      ]}
+    >
+      <View style={[styles.content, { backgroundColor: colors.surface }]}>
+        <View style={[styles.glowRing, { backgroundColor: colors.accent, opacity: 0.15 }]} />
+        <Animated.View
+          style={[
+            styles.checkContainer,
+            {
+              backgroundColor: colors.accent,
+              transform: [{ scale: checkScale }],
+            },
+          ]}
+        >
+          <Check size={36} color="#FFFFFF" strokeWidth={3} />
+        </Animated.View>
+
+        <Text style={[styles.title, { color: colors.primary }]}>
+          Welcome to PoemCloud+
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.textLight }]}>
+          Explore poetry without limits.
+        </Text>
+      </View>
+    </Animated.View>
+  );
 
   return (
-    <Modal visible={visible} transparent animationType="none">
-      {Platform.OS === 'web' ? (
-        <View style={[styles.webBlur, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
-          <Animated.View
-            style={[
-              styles.container,
-              {
-                opacity: fadeAnim,
-                transform: [{ scale: scaleAnim }],
-              },
-            ]}
-          >
-            <View style={[styles.content, { backgroundColor: colors.surface }]}>
-              <Animated.View
-                style={[
-                  styles.glowRing,
-                  {
-                    backgroundColor: colors.accent,
-                    opacity: glowOpacity,
-                  },
-                ]}
-              />
-              <Animated.View
-                style={[
-                  styles.checkContainer,
-                  {
-                    backgroundColor: colors.accent,
-                    transform: [{ scale: checkScale }],
-                  },
-                ]}
-              >
-                <Check size={36} color="#FFFFFF" strokeWidth={3} />
-              </Animated.View>
-
-              <Text style={[styles.title, { color: colors.primary }]}>
-                Welcome to PoemCloud+
-              </Text>
-              <Text style={[styles.subtitle, { color: colors.textLight }]}>
-                Explore poetry without limits.
-              </Text>
-            </View>
-          </Animated.View>
-        </View>
-      ) : (
-        <BlurView intensity={100} tint="dark" style={styles.blur}>
-          <Animated.View
-            style={[
-              styles.container,
-              {
-                opacity: fadeAnim,
-                transform: [{ scale: scaleAnim }],
-              },
-            ]}
-          >
-            <View style={[styles.content, { backgroundColor: colors.surface }]}>
-              <Animated.View
-                style={[
-                  styles.glowRing,
-                  {
-                    backgroundColor: colors.accent,
-                    opacity: glowOpacity,
-                  },
-                ]}
-              />
-              <Animated.View
-                style={[
-                  styles.checkContainer,
-                  {
-                    backgroundColor: colors.accent,
-                    transform: [{ scale: checkScale }],
-                  },
-                ]}
-              >
-                <Check size={36} color="#FFFFFF" strokeWidth={3} />
-              </Animated.View>
-
-              <Text style={[styles.title, { color: colors.primary }]}>
-                Welcome to PoemCloud+
-              </Text>
-              <Text style={[styles.subtitle, { color: colors.textLight }]}>
-                Explore poetry without limits.
-              </Text>
-            </View>
-          </Animated.View>
-        </BlurView>
-      )}
+    <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
+      <View style={styles.modalContainer} pointerEvents="box-only">
+        {Platform.OS === 'web' ? (
+          <View style={[styles.webBlur, { backgroundColor: 'rgba(0,0,0,0.7)' }]}>
+            {renderContent()}
+          </View>
+        ) : (
+          <BlurView intensity={50} tint="dark" style={styles.blur}>
+            <View style={styles.darkOverlay} />
+            {renderContent()}
+          </BlurView>
+        )}
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+  },
   blur: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   webBlur: {
     flex: 1,
@@ -226,7 +186,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.2,
     shadowRadius: 28,
     elevation: 12,
     maxWidth: width - 60,
