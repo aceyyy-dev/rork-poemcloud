@@ -36,6 +36,159 @@ const CARD_SMALL_HEIGHT = 160;
 const CARD_GAP = 12;
 const PADDING_LEFT = 20;
 
+interface AnimatedCollectionCardProps {
+  collection: Collection;
+  index: number;
+  scrollX: Animated.Value;
+  onPress: (collection: Collection) => void;
+  isPremium: boolean;
+  colors: any;
+}
+
+const AnimatedCollectionCard = React.memo(function AnimatedCollectionCard({
+  collection,
+  index,
+  scrollX,
+  onPress,
+  isPremium,
+  colors,
+}: AnimatedCollectionCardProps) {
+  const inputRange = [
+    (index - 1) * (CARD_SMALL_WIDTH + CARD_GAP),
+    index * (CARD_SMALL_WIDTH + CARD_GAP),
+    (index + 1) * (CARD_SMALL_WIDTH + CARD_GAP),
+  ];
+
+  const scale = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.85, 1, 0.85],
+    extrapolate: 'clamp',
+  });
+
+  const cardWidth = scrollX.interpolate({
+    inputRange,
+    outputRange: [CARD_SMALL_WIDTH, CARD_LARGE_WIDTH, CARD_SMALL_WIDTH],
+    extrapolate: 'clamp',
+  });
+
+  const cardHeight = scrollX.interpolate({
+    inputRange,
+    outputRange: [CARD_SMALL_HEIGHT, CARD_LARGE_HEIGHT, CARD_SMALL_HEIGHT],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <View style={styles.cardContainer}>
+      <Animated.View
+        style={[
+          styles.collectionCardWrapper,
+          {
+            width: cardWidth,
+            height: cardHeight,
+            transform: [{ scale }],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.collectionCard}
+          onPress={() => onPress(collection)}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={collection.coverGradient ? [...collection.coverGradient] : [colors.accent, colors.primary]}
+            style={styles.collectionGradient}
+          />
+          <View style={styles.collectionIconContainer}>
+            <Text style={styles.collectionIcon}>{collection.coverIcon || '📖'}</Text>
+          </View>
+          {collection.isPremium && !isPremium && (
+            <View style={[styles.premiumBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
+              <Crown size={12} color={colors.accent} />
+            </View>
+          )}
+          <View style={styles.collectionInfo}>
+            <Text style={styles.collectionTitle} numberOfLines={2}>{collection.title}</Text>
+            <Text style={styles.collectionCount}>
+              {collection.poemCount} poems
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+});
+
+interface AnimatedHorizontalListProps {
+  collections: Collection[];
+  onCollectionPress: (collection: Collection) => void;
+  isPremium: boolean;
+  colors: any;
+}
+
+const AnimatedHorizontalList = React.memo(function AnimatedHorizontalList({
+  collections,
+  onCollectionPress,
+  isPremium,
+  colors,
+}: AnimatedHorizontalListProps) {
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<any>(null);
+  const currentIndexRef = useRef(0);
+  const lastCardPadding = SCREEN_WIDTH - CARD_LARGE_WIDTH - PADDING_LEFT - CARD_GAP;
+  const cardInterval = CARD_SMALL_WIDTH + CARD_GAP;
+
+  const handleScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const nearestIndex = Math.round(offsetX / cardInterval);
+    const clampedIndex = Math.max(
+      0,
+      Math.min(
+        collections.length - 1,
+        Math.max(currentIndexRef.current - 1, Math.min(currentIndexRef.current + 1, nearestIndex))
+      )
+    );
+
+    if (clampedIndex !== nearestIndex && scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        x: clampedIndex * cardInterval,
+        animated: true,
+      });
+    }
+    currentIndexRef.current = clampedIndex;
+  };
+
+  return (
+    <Animated.ScrollView
+      ref={scrollViewRef}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={[styles.horizontalScroll, { paddingRight: lastCardPadding }]}
+      onScroll={Animated.event(
+        [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+        { useNativeDriver: false }
+      )}
+      onMomentumScrollEnd={handleScrollEnd}
+      scrollEventThrottle={16}
+      decelerationRate="fast"
+      snapToInterval={cardInterval}
+      snapToAlignment="start"
+      disableIntervalMomentum={true}
+    >
+      {collections.map((collection, index) => (
+        <AnimatedCollectionCard
+          key={collection.id}
+          collection={collection}
+          index={index}
+          scrollX={scrollX}
+          onPress={onCollectionPress}
+          isPremium={isPremium}
+          colors={colors}
+        />
+      ))}
+    </Animated.ScrollView>
+  );
+});
+
 export default function CollectionsScreen() {
   const router = useRouter();
   const { colors, isIllustrated } = useTheme();
@@ -86,128 +239,6 @@ export default function CollectionsScreen() {
   const getCountryFlag = (code: string) => {
     const country = countries.find(c => c.code === code);
     return country?.flag || '🌍';
-  };
-
-  const AnimatedCollectionCard = ({ collection, index, scrollX }: { collection: Collection; index: number; scrollX: Animated.Value }) => {
-    const inputRange = [
-      (index - 1) * (CARD_SMALL_WIDTH + CARD_GAP),
-      index * (CARD_SMALL_WIDTH + CARD_GAP),
-      (index + 1) * (CARD_SMALL_WIDTH + CARD_GAP),
-    ];
-
-    const scale = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.85, 1, 0.85],
-      extrapolate: 'clamp',
-    });
-
-    const cardWidth = scrollX.interpolate({
-      inputRange,
-      outputRange: [CARD_SMALL_WIDTH, CARD_LARGE_WIDTH, CARD_SMALL_WIDTH],
-      extrapolate: 'clamp',
-    });
-
-    const cardHeight = scrollX.interpolate({
-      inputRange,
-      outputRange: [CARD_SMALL_HEIGHT, CARD_LARGE_HEIGHT, CARD_SMALL_HEIGHT],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <View style={styles.cardContainer}>
-        <Animated.View
-          style={[
-            styles.collectionCardWrapper,
-            {
-              width: cardWidth,
-              height: cardHeight,
-              transform: [{ scale }],
-            },
-          ]}
-        >
-          <TouchableOpacity
-            style={styles.collectionCard}
-            onPress={() => handleCollectionPress(collection)}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={collection.coverGradient ? [...collection.coverGradient] : [colors.accent, colors.primary]}
-              style={styles.collectionGradient}
-            />
-            <View style={styles.collectionIconContainer}>
-              <Text style={styles.collectionIcon}>{collection.coverIcon || '📖'}</Text>
-            </View>
-            {collection.isPremium && !preferences.isPremium && (
-              <View style={[styles.premiumBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}>
-                <Crown size={12} color={colors.accent} />
-              </View>
-            )}
-            <View style={styles.collectionInfo}>
-              <Text style={styles.collectionTitle} numberOfLines={2}>{collection.title}</Text>
-              <Text style={styles.collectionCount}>
-                {collection.poemCount} poems
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-    );
-  };
-
-  const AnimatedHorizontalList = ({ collections }: { collections: Collection[] }) => {
-    const scrollX = useRef(new Animated.Value(0)).current;
-    const scrollViewRef = useRef<any>(null);
-    const currentIndexRef = useRef(0);
-    const lastCardPadding = SCREEN_WIDTH - CARD_LARGE_WIDTH - PADDING_LEFT - CARD_GAP;
-    const cardInterval = CARD_SMALL_WIDTH + CARD_GAP;
-
-    const handleScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetX = event.nativeEvent.contentOffset.x;
-      const nearestIndex = Math.round(offsetX / cardInterval);
-      const clampedIndex = Math.max(
-        0,
-        Math.min(
-          collections.length - 1,
-          Math.max(currentIndexRef.current - 1, Math.min(currentIndexRef.current + 1, nearestIndex))
-        )
-      );
-
-      if (clampedIndex !== nearestIndex && scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({
-          x: clampedIndex * cardInterval,
-          animated: true,
-        });
-      }
-      currentIndexRef.current = clampedIndex;
-    };
-
-    return (
-      <Animated.ScrollView
-        ref={scrollViewRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.horizontalScroll, { paddingRight: lastCardPadding }]}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: false }
-        )}
-        onMomentumScrollEnd={handleScrollEnd}
-        scrollEventThrottle={16}
-        decelerationRate="fast"
-        snapToInterval={cardInterval}
-        snapToAlignment="start"
-        disableIntervalMomentum={true}
-      >
-        {collections.map((collection, index) => (
-          <AnimatedCollectionCard
-            key={collection.id}
-            collection={collection}
-            index={index}
-            scrollX={scrollX}
-          />
-        ))}
-      </Animated.ScrollView>
-    );
   };
 
   const renderPlaylistCard = (playlist: Playlist) => (
@@ -365,7 +396,12 @@ export default function CollectionsScreen() {
                       {category.title}
                     </Text>
                   </View>
-                  <AnimatedHorizontalList collections={category.collections} />
+                  <AnimatedHorizontalList
+                  collections={category.collections}
+                  onCollectionPress={handleCollectionPress}
+                  isPremium={preferences.isPremium}
+                  colors={colors}
+                />
                 </View>
               ))}
             </>
