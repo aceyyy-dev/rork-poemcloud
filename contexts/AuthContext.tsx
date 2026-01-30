@@ -68,7 +68,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     const token = `token_${Date.now()}`;
     await saveAuthMutation.mutateAsync({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation.mutateAsync]);
+  }, [saveAuthMutation]);
 
   const signUpWithEmail = useCallback(async (email: string, password: string, name?: string) => {
     console.log('[Auth] Sign up with email:', email);
@@ -82,7 +82,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     const token = `token_${Date.now()}`;
     await saveAuthMutation.mutateAsync({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation.mutateAsync]);
+  }, [saveAuthMutation]);
 
   const signInWithApple = useCallback(async () => {
     console.log('[Auth] Sign in with Apple');
@@ -96,7 +96,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     const token = `token_${Date.now()}`;
     await saveAuthMutation.mutateAsync({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation.mutateAsync]);
+  }, [saveAuthMutation]);
 
   const signInWithGoogle = useCallback(async () => {
     console.log('[Auth] Sign in with Google');
@@ -110,7 +110,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     const token = `token_${Date.now()}`;
     await saveAuthMutation.mutateAsync({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation.mutateAsync]);
+  }, [saveAuthMutation]);
 
   const signOut = useCallback(async () => {
     console.log('[Auth] Sign out');
@@ -144,14 +144,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     };
     await saveAuthMutation.mutateAsync({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation.mutateAsync, queryClient]);
+  }, [saveAuthMutation, queryClient]);
 
   const updateUserPremiumStatus = useCallback(async (isPremium: boolean) => {
     if (!authState.user) return;
     const updatedUser = { ...authState.user, isPremium };
     const updatedState = { ...authState, user: updatedUser };
     await saveAuthMutation.mutateAsync(updatedState);
-  }, [authState, saveAuthMutation.mutateAsync]);
+  }, [authState, saveAuthMutation]);
 
   return {
     user: authState.user,
