@@ -28,14 +28,18 @@ function IllustratedBackground({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ImageBackground
-      source={{ uri: illustratedTheme.backgroundImage }}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <View style={[styles.overlay, { backgroundColor: illustratedTheme.overlayColor }]} />
-      {children}
-    </ImageBackground>
+    <View style={styles.container}>
+      <ImageBackground
+        source={{ uri: illustratedTheme.backgroundImage }}
+        style={styles.illustratedBg}
+        resizeMode="cover"
+      >
+        <View style={[styles.overlay, { backgroundColor: illustratedTheme.overlayColor }]} />
+      </ImageBackground>
+      <View style={styles.contentLayer}>
+        {children}
+      </View>
+    </View>
   );
 }
 
@@ -131,8 +135,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  illustratedBg: {
+    ...StyleSheet.absoluteFillObject,
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
+  },
+  contentLayer: {
+    flex: 1,
   },
 });
 
