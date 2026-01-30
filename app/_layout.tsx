@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { Animated, StyleSheet, View, ImageBackground } from "react-native";
+import FogBackground from "@/components/FogBackground";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UserProvider } from "@/contexts/UserContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
@@ -24,7 +25,12 @@ function IllustratedBackground({ children }: { children: React.ReactNode }) {
   const { isIllustrated, illustratedTheme, colors } = useTheme();
 
   if (!isIllustrated || !illustratedTheme) {
-    return <View style={[styles.container, { backgroundColor: colors.background }]}>{children}</View>;
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <FogBackground />
+        {children}
+      </View>
+    );
   }
 
   return (
@@ -36,6 +42,7 @@ function IllustratedBackground({ children }: { children: React.ReactNode }) {
       >
         <View style={[styles.overlay, { backgroundColor: illustratedTheme.overlayColor }]} />
       </ImageBackground>
+      <FogBackground />
       <View style={styles.contentLayer}>
         {children}
       </View>
