@@ -23,6 +23,8 @@ import {
   Crown,
   Pause,
   Search,
+  Play,
+  XCircle,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -54,7 +56,7 @@ export default function PoemDetailScreen() {
   const [translationLanguage, setTranslationLanguage] = useState<string | null>(null);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [showListenModal, setShowListenModal] = useState(false);
-  const { toggleSpeech, isSpeakingPoem, stopSpeaking, progress, getRemainingTime, seekTo } = useTTS();
+  const { toggleSpeech, isSpeakingPoem, stopSpeaking, progress, getRemainingTime, seekTo, hasActiveAudio, dismissPlayer } = useTTS();
   const { enterProtectedScreen, exitProtectedScreen } = useScreenCapture();
   const [languageSearch, setLanguageSearch] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
@@ -201,6 +203,7 @@ export default function PoemDetailScreen() {
   };
 
   const isPlaying = poem ? isSpeakingPoem(poem.id) : false;
+  const showAudioUI = poem ? hasActiveAudio(poem.id) : false;
 
   const filteredLanguages = SUPPORTED_LANGUAGES.filter(lang =>
     lang.label.toLowerCase().includes(languageSearch.toLowerCase())
@@ -317,12 +320,14 @@ export default function PoemDetailScreen() {
             {showTranslation && translatedText ? translatedText : poem.text}
           </Text>
 
-          {isPlaying && (
+          {showAudioUI && (
             <AudioPlayerInline
               progress={progress}
               remainingTime={getRemainingTime()}
+              isPlaying={isPlaying}
               onToggle={handleListen}
               onSeek={seekTo}
+              onDismiss={dismissPlayer}
               colors={colors}
             />
           )}
@@ -459,12 +464,14 @@ export default function PoemDetailScreen() {
 interface AudioPlayerInlineProps {
   progress: number;
   remainingTime: string;
+  isPlaying: boolean;
   onToggle: () => void;
   onSeek: (position: number) => void;
+  onDismiss: () => void;
   colors: any;
 }
 
-function AudioPlayerInline({ progress, remainingTime, onToggle, onSeek, colors }: AudioPlayerInlineProps) {
+function AudioPlayerInline({ progress, remainingTime, isPlaying, onToggle, onSeek, onDismiss, colors }: AudioPlayerInlineProps) {
   const progressBarWidth = React.useRef(0);
   const [localProgress, setLocalProgress] = React.useState(progress);
   const isDragging = React.useRef(false);
@@ -507,7 +514,11 @@ function AudioPlayerInline({ progress, remainingTime, onToggle, onSeek, colors }
   return (
     <View style={[styles.audioPlayer, { backgroundColor: colors.surfaceSecondary }]}>
       <TouchableOpacity onPress={onToggle} style={styles.audioPlayButton}>
-        <Pause size={24} color={colors.accent} />
+        {isPlaying ? (
+          <Pause size={24} color={colors.accent} />
+        ) : (
+          <Play size={24} color={colors.accent} />
+        )}
       </TouchableOpacity>
       <View style={styles.audioInfo}>
         <View 
@@ -520,8 +531,11 @@ function AudioPlayerInline({ progress, remainingTime, onToggle, onSeek, colors }
             <View style={[styles.audioThumb, { backgroundColor: colors.accent, left: progressPercent }]} />
           </View>
         </View>
-        <Text style={[styles.audioTime, { color: colors.textMuted }]}>{remainingTime} remaining</Text>
+        <Text style={[styles.audioTime, { color: colors.textMuted }]}>{localProgress >= 1 ? 'Finished' : `${remainingTime} remaining`}</Text>
       </View>
+      <TouchableOpacity onPress={onDismiss} style={styles.audioDismissButton}>
+        <XCircle size={20} color={colors.textMuted} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -668,6 +682,10 @@ const styles = StyleSheet.create({
   },
   audioTime: {
     fontSize: 12,
+  },
+  audioDismissButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   moodContainer: {
     flexDirection: 'row',

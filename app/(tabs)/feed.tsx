@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Heart, Bookmark, Share2, Headphones, Languages, Crown, Search, X, Check, Play, Pause, ListPlus } from 'lucide-react-native';
+import { Heart, Bookmark, Share2, Headphones, Languages, Crown, Search, X, Check, Play, Pause, ListPlus, XCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
@@ -67,7 +67,7 @@ export default function FeedScreen() {
   const [showTranslation, setShowTranslation] = useState<Record<string, boolean>>({});
   const [languageSearch, setLanguageSearch] = useState('');
   const [showListenModal, setShowListenModal] = useState(false);
-  const { stopSpeaking, toggleSpeech, isSpeakingPoem, hasActiveAudio, isPaused, progress, getRemainingTime, seekTo, duration } = useTTS();
+  const { stopSpeaking, toggleSpeech, isSpeakingPoem, hasActiveAudio, isPaused, progress, getRemainingTime, seekTo, duration, dismissPlayer } = useTTS();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePoem, setSharePoem] = useState<Poem | null>(null);
   const translationCacheRef = useRef<Record<string, string>>({});
@@ -228,6 +228,7 @@ export default function FeedScreen() {
       remainingTime={getRemainingTime()}
       duration={duration}
       onSeek={seekTo}
+      onDismissPlayer={dismissPlayer}
       onLike={() => {
         if (Platform.OS !== 'web') {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -254,7 +255,7 @@ export default function FeedScreen() {
       onPoetPress={() => router.push(`/poet/${poem.poetId}`)}
       colors={colors}
     />
-  ), [isLiked, isBookmarked, preferences.isPremium, toggleLike, toggleBookmark, router, colors, translatedPoems, showTranslation, isSpeakingPoem, hasActiveAudio, isPaused, ITEM_HEIGHT, handleListen, progress, getRemainingTime, handleAddToPlaylist, handleShare, duration, seekTo, handleTranslate]);
+  ), [isLiked, isBookmarked, preferences.isPremium, toggleLike, toggleBookmark, router, colors, translatedPoems, showTranslation, isSpeakingPoem, hasActiveAudio, isPaused, ITEM_HEIGHT, handleListen, progress, getRemainingTime, handleAddToPlaylist, handleShare, duration, seekTo, handleTranslate, dismissPlayer]);
 
   const getItemLayout = useCallback((_: any, index: number) => ({
     length: ITEM_HEIGHT,
@@ -428,6 +429,7 @@ interface FeedItemProps {
   remainingTime: string;
   duration: number;
   onSeek: (position: number) => void;
+  onDismissPlayer: () => void;
   onLike: () => void;
   onBookmark: () => void;
   onShare: () => void;
@@ -455,6 +457,7 @@ const FeedItem = React.memo(function FeedItem({
   remainingTime,
   duration,
   onSeek,
+  onDismissPlayer,
   onLike,
   onBookmark,
   onShare,
@@ -687,6 +690,9 @@ const FeedItem = React.memo(function FeedItem({
               </View>
             </View>
             <Text style={[styles.audioTimeSmall, { color: colors.textMuted }]}>{localProgress >= 1 ? '0:00' : remainingTime}</Text>
+            <TouchableOpacity onPress={onDismissPlayer} style={styles.audioDismiss}>
+              <XCircle size={16} color={colors.textMuted} />
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -886,6 +892,10 @@ const styles = StyleSheet.create({
     position: 'absolute' as const,
     top: -3,
     marginLeft: -5,
+  },
+  audioDismiss: {
+    padding: 4,
+    marginLeft: 4,
   },
   actionsRail: {
     justifyContent: 'flex-end',
