@@ -1,4 +1,4 @@
-import { Tabs, useRouter } from "expo-router";
+import { Tabs } from "expo-router";
 import { Home, Sparkles, Search, BookOpen, User } from "lucide-react-native";
 import React from "react";
 import { Platform } from "react-native";

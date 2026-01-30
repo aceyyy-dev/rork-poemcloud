@@ -32,7 +32,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { colors, isIllustrated } = useTheme();
   const { preferences, stats, setPremium, bookmarkCount } = useUser();
-  const { user, isLoggedIn, signOut } = useAuth();
+  const { isLoggedIn } = useAuth();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
@@ -205,7 +205,7 @@ export default function ProfileScreen() {
                   {preferences.isPremium && (
                     <View style={[styles.insightBox, { backgroundColor: colors.premiumLight }]}>
                       <Text style={[styles.insightText, { color: colors.primary }]}>
-                        You're drawn to {topMoods[0]} poetry
+                        You&apos;re drawn to {topMoods[0]} poetry
                         {topCountries.length > 0 && ` from ${topCountries[0]}`}.
                       </Text>
                     </View>
