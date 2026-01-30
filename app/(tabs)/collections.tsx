@@ -263,7 +263,7 @@ export default function CollectionsScreen() {
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: colors.primary }]}>Collections</Text>
+          <Text style={[styles.headerTitle, { color: colors.primary }]}>Library</Text>
         </View>
 
         <View style={styles.tabs}>
