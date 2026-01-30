@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -38,7 +37,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBiometric } from '@/contexts/BiometricContext';
 import { countries } from '@/mocks/countries';
 import { Mood } from '@/types';
-import { premiumThemes, illustratedThemes, ThemeId } from '@/constants/colors';
+import { premiumThemes, ThemeId } from '@/constants/colors';
 import PremiumModal from '@/components/PremiumModal';
 import { triggerHaptic } from '@/utils/haptics';
 
@@ -149,8 +148,7 @@ export default function SettingsScreen() {
   };
 
   const handleThemeSelect = (newThemeId: ThemeId) => {
-    const isPremiumThemeSelection = premiumThemes.some(t => t.id === newThemeId) || 
-                                     illustratedThemes.some(t => t.id === newThemeId);
+    const isPremiumThemeSelection = premiumThemes.some(t => t.id === newThemeId);
     
     if (isPremiumThemeSelection && !isPremium) {
       triggerHaptic('medium');
@@ -588,59 +586,6 @@ export default function SettingsScreen() {
                 })}
               </View>
 
-              <View style={styles.illustratedThemesHeader}>
-                <View>
-                  <Text style={[styles.themeSectionLabel, { color: colors.textMuted, marginBottom: 2 }]}>POEMCLOUD+ · ILLUSTRATED THEMES</Text>
-                  <Text style={[styles.illustratedSubtitle, { color: colors.textMuted }]}>Calm illustrated backgrounds for immersive reading</Text>
-                </View>
-                {!isPremium && (
-                  <View style={[styles.premiumBadge, { backgroundColor: colors.accentLight }]}>
-                    <Crown size={12} color={colors.accent} />
-                    <Text style={[styles.premiumBadgeText, { color: colors.accent }]}>Premium</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.themeGrid}>
-                {illustratedThemes.map((theme) => {
-                  const isSelected = themeId === theme.id;
-                  const isLocked = !isPremium;
-                  
-                  return (
-                    <TouchableOpacity
-                      key={theme.id}
-                      style={[
-                        styles.themeCard,
-                        { borderColor: isSelected ? colors.accent : colors.border },
-                        isSelected && styles.themeCardSelected,
-                      ]}
-                      onPress={() => handleThemeSelect(theme.id)}
-                    >
-                      <View style={[styles.themePreview, styles.illustratedPreview]}>
-                        <Image
-                          source={{ uri: theme.backgroundImage }}
-                          style={styles.illustratedPreviewImage}
-                          resizeMode="cover"
-                        />
-                        <View style={[styles.illustratedCardOverlay, { backgroundColor: theme.previewColors.card }]}>
-                          <View style={[styles.themePreviewLine, { backgroundColor: theme.previewColors.accent }]} />
-                          <View style={[styles.themePreviewLineShort, { backgroundColor: theme.previewColors.accent, opacity: 0.5 }]} />
-                        </View>
-                        {isLocked && (
-                          <View style={styles.lockedOverlay}>
-                            <Crown size={18} color="#ffffff" />
-                          </View>
-                        )}
-                      </View>
-                      <View style={styles.themeInfo}>
-                        <Text style={[styles.themeName, { color: colors.primary }]}>{theme.name}</Text>
-                        {isSelected && <Check size={16} color={colors.accent} />}
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
               <View style={{ height: 40 }} />
             </ScrollView>
           </SafeAreaView>
@@ -1064,39 +1009,5 @@ const styles = StyleSheet.create({
   themeName: {
     fontSize: 14,
     fontWeight: '500',
-  },
-  illustratedThemesHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginTop: 28,
-    marginBottom: 12,
-  },
-  illustratedSubtitle: {
-    fontSize: 11,
-    marginTop: 2,
-  },
-  illustratedPreview: {
-    overflow: 'hidden',
-    padding: 0,
-  },
-  illustratedPreviewImage: {
-    ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
-    borderRadius: 12,
-  },
-  illustratedCardOverlay: {
-    position: 'absolute',
-    top: 16,
-    left: 12,
-    right: 12,
-    borderRadius: 8,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
   },
 });

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { Animated, StyleSheet, View, Image } from "react-native";
+import { Animated, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UserProvider } from "@/contexts/UserContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
@@ -20,42 +20,17 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 
 const queryClient = new QueryClient();
 
-function IllustratedBackground({ imageUrl, overlay }: { imageUrl: string; overlay: string }) {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Image
-        source={{ uri: imageUrl }}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      />
-      <View style={[styles.overlayLayer, { backgroundColor: overlay }]} />
-    </View>
-  );
-}
-
 function RootLayoutNav() {
-  const { colors, transitionOpacity, isIllustratedTheme, illustratedThemeData } = useTheme();
-  
-  const backgroundColor = isIllustratedTheme ? 'transparent' : colors.background;
-  const headerBgColor = isIllustratedTheme ? 'transparent' : colors.background;
+  const { colors, transitionOpacity } = useTheme();
   
   return (
     <Animated.View style={[styles.container, { opacity: transitionOpacity }]}>
-      {isIllustratedTheme && illustratedThemeData && (
-        <IllustratedBackground 
-          imageUrl={illustratedThemeData.backgroundImage} 
-          overlay={illustratedThemeData.overlayColor} 
-        />
-      )}
-      {!isIllustratedTheme && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
-      )}
     <Stack
       screenOptions={{
         headerBackTitle: "Back",
-        headerStyle: { backgroundColor: headerBgColor },
+        headerStyle: { backgroundColor: colors.background },
         headerTintColor: colors.primary,
-        contentStyle: { backgroundColor },
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -134,14 +109,6 @@ function RootLayoutNav() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backgroundImage: {
-    ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
-  },
-  overlayLayer: {
-    ...StyleSheet.absoluteFillObject,
   },
 });
 
