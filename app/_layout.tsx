@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { Animated, StyleSheet } from "react-native";
+import { Animated, StyleSheet, View, ImageBackground } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UserProvider } from "@/contexts/UserContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
@@ -20,17 +20,37 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 
 const queryClient = new QueryClient();
 
+function IllustratedBackground({ children }: { children: React.ReactNode }) {
+  const { isIllustrated, illustratedTheme, colors } = useTheme();
+
+  if (!isIllustrated || !illustratedTheme) {
+    return <View style={[styles.container, { backgroundColor: colors.background }]}>{children}</View>;
+  }
+
+  return (
+    <ImageBackground
+      source={{ uri: illustratedTheme.backgroundImage }}
+      style={styles.container}
+      resizeMode="cover"
+    >
+      <View style={[styles.overlay, { backgroundColor: illustratedTheme.overlayColor }]} />
+      {children}
+    </ImageBackground>
+  );
+}
+
 function RootLayoutNav() {
-  const { colors, transitionOpacity } = useTheme();
+  const { colors, transitionOpacity, isIllustrated } = useTheme();
   
   return (
+    <IllustratedBackground>
     <Animated.View style={[styles.container, { opacity: transitionOpacity }]}>
     <Stack
       screenOptions={{
         headerBackTitle: "Back",
-        headerStyle: { backgroundColor: colors.background },
+        headerStyle: { backgroundColor: isIllustrated ? 'transparent' : colors.background },
         headerTintColor: colors.primary,
-        contentStyle: { backgroundColor: colors.background },
+        contentStyle: { backgroundColor: isIllustrated ? 'transparent' : colors.background },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -103,12 +123,16 @@ function RootLayoutNav() {
       />
     </Stack>
     </Animated.View>
+    </IllustratedBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
   },
 });
 

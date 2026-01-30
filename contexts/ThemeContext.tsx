@@ -7,8 +7,13 @@ import {
   ThemeColors, 
   ThemeId, 
   getThemeColors,
+  getIllustratedTheme,
+  isIllustratedTheme,
   premiumThemes,
+  premiumColorThemes,
+  illustratedThemes,
   freeThemes,
+  IllustratedThemeDefinition,
 } from '@/constants/colors';
 
 const THEME_STORAGE_KEY = 'poemcloud_theme';
@@ -76,6 +81,14 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     return premiumThemes.some(t => t.id === themeId);
   }, [themeId]);
 
+  const illustratedTheme: IllustratedThemeDefinition | null = useMemo(() => {
+    return getIllustratedTheme(themeId);
+  }, [themeId]);
+
+  const isIllustrated = useMemo(() => {
+    return isIllustratedTheme(themeId);
+  }, [themeId]);
+
   const isDark = useMemo(() => {
     if (isPremiumTheme) {
       return true;
@@ -110,9 +123,13 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     colors,
     isLoading: themeQuery.isLoading,
     isPremiumTheme,
+    isIllustrated,
+    illustratedTheme,
     currentThemeName,
     resetToFreeTheme,
     premiumThemes,
+    premiumColorThemes,
+    illustratedThemes,
     freeThemes,
     transitionOpacity,
   };

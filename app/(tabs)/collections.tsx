@@ -38,7 +38,7 @@ const PADDING_LEFT = 20;
 
 export default function CollectionsScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isIllustrated } = useTheme();
   const { preferences, setPremium, bookmarkCount, maxFreeBookmarks } = useUser();
   const { playlists } = usePlaylists();
   const [activeTab, setActiveTab] = useState<Tab>('curated');
@@ -253,11 +253,13 @@ export default function CollectionsScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.gradientStart, colors.background]}
-        style={styles.gradient}
-      />
+    <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
+      {!isIllustrated && (
+        <LinearGradient
+          colors={[colors.gradientStart, colors.background]}
+          style={styles.gradient}
+        />
+      )}
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>

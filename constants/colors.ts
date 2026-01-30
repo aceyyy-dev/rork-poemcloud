@@ -129,16 +129,28 @@ export type ThemeId =
   | 'system'
   | 'ink-night'
   | 'dawn-pages'
-  | 'moss-paper'
-  | 'ember-quiet'
   | 'fog-silence'
   | 'nocturne-violet'
-  | 'sunset-verse';
+  | 'morning-light'
+  | 'golden-dusk'
+  | 'blue-hour';
 
 export type PremiumThemeDefinition = {
   id: ThemeId;
   name: string;
   isPremium: boolean;
+  previewColors: { bg: string; card: string; accent: string };
+  colors: ThemeColors;
+  isIllustrated?: false;
+};
+
+export type IllustratedThemeDefinition = {
+  id: ThemeId;
+  name: string;
+  isPremium: boolean;
+  isIllustrated: true;
+  backgroundImage: string;
+  overlayColor: string;
   previewColors: { bg: string; card: string; accent: string };
   colors: ThemeColors;
 };
@@ -233,95 +245,7 @@ const dawnPages: ThemeColors = {
   },
 };
 
-const mossPaper: ThemeColors = {
-  primary: '#d4e8dc',
-  secondary: '#a8c8b4',
-  accent: '#8ab89a',
-  accentLight: '#2a4a3a',
-  background: '#0f1f18',
-  surface: '#1a2f24',
-  surfaceSecondary: '#243d30',
-  text: '#d4e8dc',
-  textLight: '#a8c8b4',
-  textMuted: '#6a9a7c',
-  textWhite: '#ffffff',
-  cloud1: '#1a2f24',
-  cloud2: '#1e3528',
-  cloud3: '#162a1f',
-  cloud4: '#1c3126',
-  gradientStart: '#0f1f18',
-  gradientMid: '#14261e',
-  gradientEnd: '#0f1f18',
-  cardBg: 'rgba(26, 47, 36, 0.95)',
-  overlay: 'rgba(0, 0, 0, 0.6)',
-  premium: '#8ab89a',
-  premiumLight: '#243d30',
-  mood: {
-    calm: '#8ab89a',
-    sad: '#8b9dc3',
-    love: '#d4a5a5',
-    hope: '#a5c9b5',
-    melancholy: '#a3a3c2',
-    healing: '#9fc2b5',
-    longing: '#b8a5c9',
-    joy: '#c9c47e',
-    reflection: '#94b8c9',
-  },
-  border: '#2a4a3a',
-  borderLight: '#1a2f24',
-  success: '#7eb8a3',
-  error: '#c98b87',
-  tabBar: {
-    active: '#d4e8dc',
-    inactive: '#6a9a7c',
-    background: '#1a2f24',
-  },
-};
 
-const emberQuiet: ThemeColors = {
-  primary: '#f5e0d8',
-  secondary: '#d4b8a8',
-  accent: '#d4886a',
-  accentLight: '#4a3028',
-  background: '#1f1814',
-  surface: '#2f2420',
-  surfaceSecondary: '#3d302a',
-  text: '#f5e0d8',
-  textLight: '#d4b8a8',
-  textMuted: '#a88070',
-  textWhite: '#ffffff',
-  cloud1: '#2f2420',
-  cloud2: '#352a24',
-  cloud3: '#291e1a',
-  cloud4: '#312622',
-  gradientStart: '#1f1814',
-  gradientMid: '#261e1a',
-  gradientEnd: '#1f1814',
-  cardBg: 'rgba(47, 36, 32, 0.95)',
-  overlay: 'rgba(0, 0, 0, 0.6)',
-  premium: '#d4886a',
-  premiumLight: '#3d302a',
-  mood: {
-    calm: '#c9a87e',
-    sad: '#a88a78',
-    love: '#c9877e',
-    hope: '#a5c9b5',
-    melancholy: '#b8a5c9',
-    healing: '#9fc2b5',
-    longing: '#c9a5b8',
-    joy: '#c9c47e',
-    reflection: '#a5b8c9',
-  },
-  border: '#3d302a',
-  borderLight: '#2f2420',
-  success: '#9fc2a5',
-  error: '#c9877e',
-  tabBar: {
-    active: '#f5e0d8',
-    inactive: '#a88070',
-    background: '#2f2420',
-  },
-};
 
 const fogSilence: ThemeColors = {
   primary: '#e0e4e8',
@@ -413,29 +337,74 @@ const nocturneViolet: ThemeColors = {
   },
 };
 
-const sunsetVerse: ThemeColors = {
-  primary: '#f5e8e0',
-  secondary: '#d4b8a8',
-  accent: '#e8a080',
-  accentLight: '#4a2828',
-  background: '#1a1418',
-  surface: '#2a2024',
-  surfaceSecondary: '#3a2830',
-  text: '#f5e8e0',
-  textLight: '#d4b8a8',
-  textMuted: '#a08078',
+const morningLight: ThemeColors = {
+  primary: '#5c4a3a',
+  secondary: '#8b7a68',
+  accent: '#d4a574',
+  accentLight: '#f5e6d3',
+  background: 'transparent',
+  surface: 'rgba(255, 252, 247, 0.88)',
+  surfaceSecondary: 'rgba(250, 245, 235, 0.85)',
+  text: '#4a3a2a',
+  textLight: '#7a6a58',
+  textMuted: '#9a8a78',
   textWhite: '#ffffff',
-  cloud1: '#2a2024',
-  cloud2: '#302428',
-  cloud3: '#241c20',
-  cloud4: '#2c2226',
-  gradientStart: '#1a1418',
-  gradientMid: '#22181c',
-  gradientEnd: '#1a1418',
-  cardBg: 'rgba(42, 32, 36, 0.95)',
-  overlay: 'rgba(0, 0, 0, 0.6)',
+  cloud1: 'rgba(255, 250, 240, 0.6)',
+  cloud2: 'rgba(255, 248, 235, 0.5)',
+  cloud3: 'rgba(250, 245, 230, 0.55)',
+  cloud4: 'rgba(255, 252, 242, 0.5)',
+  gradientStart: '#faf6f0',
+  gradientMid: '#f5ede0',
+  gradientEnd: '#faf6f0',
+  cardBg: 'rgba(255, 252, 247, 0.92)',
+  overlay: 'rgba(92, 74, 58, 0.4)',
+  premium: '#d4a574',
+  premiumLight: '#f5e6d3',
+  mood: {
+    calm: '#c9b896',
+    sad: '#a89078',
+    love: '#d4a5a5',
+    hope: '#b5c9a5',
+    melancholy: '#b8a5c9',
+    healing: '#a5c9b5',
+    longing: '#c9a5b8',
+    joy: '#d4c47e',
+    reflection: '#a5b8c9',
+  },
+  border: 'rgba(200, 185, 165, 0.5)',
+  borderLight: 'rgba(220, 205, 185, 0.4)',
+  success: '#9fc2a5',
+  error: '#c9877e',
+  tabBar: {
+    active: '#5c4a3a',
+    inactive: '#9a8a78',
+    background: 'rgba(255, 252, 247, 0.95)',
+  },
+};
+
+const goldenDusk: ThemeColors = {
+  primary: '#f5e8e0',
+  secondary: '#e0c8b8',
+  accent: '#e8a080',
+  accentLight: '#4a3028',
+  background: 'transparent',
+  surface: 'rgba(45, 32, 28, 0.88)',
+  surfaceSecondary: 'rgba(55, 40, 35, 0.85)',
+  text: '#f5e8e0',
+  textLight: '#e0c8b8',
+  textMuted: '#b8a090',
+  textWhite: '#ffffff',
+  cloud1: 'rgba(60, 45, 40, 0.6)',
+  cloud2: 'rgba(55, 42, 38, 0.5)',
+  cloud3: 'rgba(50, 38, 35, 0.55)',
+  cloud4: 'rgba(58, 44, 40, 0.5)',
+  gradientStart: '#2a1c18',
+  gradientMid: '#3a2820',
+  gradientEnd: '#2a1c18',
+  cardBg: 'rgba(45, 32, 28, 0.92)',
+  overlay: 'rgba(0, 0, 0, 0.5)',
   premium: '#e8a080',
-  premiumLight: '#3a2830',
+  premiumLight: '#4a3028',
   mood: {
     calm: '#c9a090',
     sad: '#a88890',
@@ -447,18 +416,63 @@ const sunsetVerse: ThemeColors = {
     joy: '#d4c080',
     reflection: '#a0b0c0',
   },
-  border: '#3a2830',
-  borderLight: '#2a2024',
+  border: 'rgba(120, 90, 75, 0.5)',
+  borderLight: 'rgba(100, 75, 65, 0.4)',
   success: '#a0c0a8',
   error: '#c98878',
   tabBar: {
     active: '#f5e8e0',
-    inactive: '#a08078',
-    background: '#2a2024',
+    inactive: '#b8a090',
+    background: 'rgba(45, 32, 28, 0.95)',
   },
 };
 
-export const premiumThemes: PremiumThemeDefinition[] = [
+const blueHour: ThemeColors = {
+  primary: '#e0e8f5',
+  secondary: '#b8c8e0',
+  accent: '#8aa0c8',
+  accentLight: '#2a3548',
+  background: 'transparent',
+  surface: 'rgba(28, 35, 55, 0.88)',
+  surfaceSecondary: 'rgba(35, 42, 65, 0.85)',
+  text: '#e0e8f5',
+  textLight: '#b8c8e0',
+  textMuted: '#8090a8',
+  textWhite: '#ffffff',
+  cloud1: 'rgba(35, 42, 60, 0.6)',
+  cloud2: 'rgba(38, 45, 65, 0.5)',
+  cloud3: 'rgba(32, 40, 58, 0.55)',
+  cloud4: 'rgba(36, 44, 62, 0.5)',
+  gradientStart: '#1a2035',
+  gradientMid: '#242c42',
+  gradientEnd: '#1a2035',
+  cardBg: 'rgba(28, 35, 55, 0.92)',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  premium: '#8aa0c8',
+  premiumLight: '#2a3548',
+  mood: {
+    calm: '#8aa8b8',
+    sad: '#8b9dc3',
+    love: '#c9a5b5',
+    hope: '#a5c9b5',
+    melancholy: '#a3a3c2',
+    healing: '#9fc2b5',
+    longing: '#b8a5c9',
+    joy: '#c9c47e',
+    reflection: '#94b8c9',
+  },
+  border: 'rgba(80, 95, 130, 0.5)',
+  borderLight: 'rgba(65, 80, 110, 0.4)',
+  success: '#7eb8a3',
+  error: '#c98b87',
+  tabBar: {
+    active: '#e0e8f5',
+    inactive: '#8090a8',
+    background: 'rgba(28, 35, 55, 0.95)',
+  },
+};
+
+export const premiumColorThemes: PremiumThemeDefinition[] = [
   {
     id: 'ink-night',
     name: 'Ink Night',
@@ -474,20 +488,6 @@ export const premiumThemes: PremiumThemeDefinition[] = [
     colors: dawnPages,
   },
   {
-    id: 'moss-paper',
-    name: 'Moss & Paper',
-    isPremium: true,
-    previewColors: { bg: '#0f1f18', card: '#1a2f24', accent: '#8ab89a' },
-    colors: mossPaper,
-  },
-  {
-    id: 'ember-quiet',
-    name: 'Ember Quiet',
-    isPremium: true,
-    previewColors: { bg: '#1f1814', card: '#2f2420', accent: '#d4886a' },
-    colors: emberQuiet,
-  },
-  {
     id: 'fog-silence',
     name: 'Fog & Silence',
     isPremium: true,
@@ -501,13 +501,44 @@ export const premiumThemes: PremiumThemeDefinition[] = [
     previewColors: { bg: '#14121a', card: '#201e28', accent: '#9a88c8' },
     colors: nocturneViolet,
   },
+];
+
+export const illustratedThemes: IllustratedThemeDefinition[] = [
   {
-    id: 'sunset-verse',
-    name: 'Sunset Verse',
+    id: 'morning-light',
+    name: 'Morning Light',
     isPremium: true,
-    previewColors: { bg: '#1a1418', card: '#2a2024', accent: '#e8a080' },
-    colors: sunsetVerse,
+    isIllustrated: true,
+    backgroundImage: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/1hlrj7g7lfmbgnq45a52u',
+    overlayColor: 'rgba(255, 252, 247, 0.15)',
+    previewColors: { bg: '#faf6f0', card: '#fff8f0', accent: '#d4a574' },
+    colors: morningLight,
   },
+  {
+    id: 'golden-dusk',
+    name: 'Golden Dusk',
+    isPremium: true,
+    isIllustrated: true,
+    backgroundImage: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/3iqmavblyyq7viv6thb52',
+    overlayColor: 'rgba(30, 20, 15, 0.25)',
+    previewColors: { bg: '#e8a080', card: '#d4886a', accent: '#f5c8a8' },
+    colors: goldenDusk,
+  },
+  {
+    id: 'blue-hour',
+    name: 'Blue Hour',
+    isPremium: true,
+    isIllustrated: true,
+    backgroundImage: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/jdn8xir8svsmrltzbqqmt',
+    overlayColor: 'rgba(20, 25, 45, 0.25)',
+    previewColors: { bg: '#3a4a6a', card: '#4a5a7a', accent: '#8aa0c8' },
+    colors: blueHour,
+  },
+];
+
+export const premiumThemes: (PremiumThemeDefinition | IllustratedThemeDefinition)[] = [
+  ...premiumColorThemes,
+  ...illustratedThemes,
 ];
 
 export const freeThemes: { id: ThemeId; name: string; isPremium: boolean }[] = [
@@ -527,6 +558,15 @@ export function getThemeColors(themeId: ThemeId, isDarkMode: boolean): ThemeColo
   }
   
   return isDarkMode ? darkTheme : lightTheme;
+}
+
+export function getIllustratedTheme(themeId: ThemeId): IllustratedThemeDefinition | null {
+  const theme = illustratedThemes.find(t => t.id === themeId);
+  return theme || null;
+}
+
+export function isIllustratedTheme(themeId: ThemeId): boolean {
+  return illustratedThemes.some(t => t.id === themeId);
 }
 
 export default lightTheme;

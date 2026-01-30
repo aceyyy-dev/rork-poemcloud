@@ -30,7 +30,7 @@ import ScreenCaptureOverlay from '@/components/ScreenCaptureOverlay';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isIllustrated } = useTheme();
   const { preferences, completeOnboarding, isLiked, isBookmarked, toggleLike, toggleBookmark } = useUser();
   const { isPremium } = usePurchases();
   const { toggleSpeech, isSpeakingPoem, progress, getRemainingTime } = useTTS();
@@ -125,12 +125,14 @@ export default function HomeScreen() {
   const bookmarked = isBookmarked(todaysPoem.id);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.gradientStart, colors.gradientMid, colors.background]}
-        locations={[0, 0.3, 1]}
-        style={styles.gradient}
-      />
+    <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
+      {!isIllustrated && (
+        <LinearGradient
+          colors={[colors.gradientStart, colors.gradientMid, colors.background]}
+          locations={[0, 0.3, 1]}
+          style={styles.gradient}
+        />
+      )}
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>

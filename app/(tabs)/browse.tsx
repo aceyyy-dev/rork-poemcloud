@@ -19,7 +19,7 @@ type Tab = 'countries' | 'poets';
 
 export default function BrowseScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isIllustrated } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab>('countries');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -32,11 +32,13 @@ export default function BrowseScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.gradientStart, colors.background]}
-        style={styles.gradient}
-      />
+    <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
+      {!isIllustrated && (
+        <LinearGradient
+          colors={[colors.gradientStart, colors.background]}
+          style={styles.gradient}
+        />
+      )}
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>

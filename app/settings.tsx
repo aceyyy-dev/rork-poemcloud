@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -37,7 +38,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBiometric } from '@/contexts/BiometricContext';
 import { countries } from '@/mocks/countries';
 import { Mood } from '@/types';
-import { premiumThemes, ThemeId } from '@/constants/colors';
+import { premiumColorThemes, illustratedThemes, ThemeId } from '@/constants/colors';
 import PremiumModal from '@/components/PremiumModal';
 import { triggerHaptic } from '@/utils/haptics';
 
@@ -148,9 +149,10 @@ export default function SettingsScreen() {
   };
 
   const handleThemeSelect = (newThemeId: ThemeId) => {
-    const isPremiumThemeSelection = premiumThemes.some(t => t.id === newThemeId);
+    const isPremiumColorTheme = premiumColorThemes.some(t => t.id === newThemeId);
+    const isIllustratedTheme = illustratedThemes.some(t => t.id === newThemeId);
     
-    if (isPremiumThemeSelection && !isPremium) {
+    if ((isPremiumColorTheme || isIllustratedTheme) && !isPremium) {
       triggerHaptic('medium');
       setShowThemeModal(false);
       setTimeout(() => setShowPremiumModal(true), 300);
@@ -541,7 +543,7 @@ export default function SettingsScreen() {
               </View>
 
               <View style={styles.premiumThemesHeader}>
-                <Text style={[styles.themeSectionLabel, { color: colors.textMuted }]}>POEMCLOUD+ THEMES</Text>
+                <Text style={[styles.themeSectionLabel, { color: colors.textMuted }]}>POEMCLOUD+ COLOR THEMES</Text>
                 {!isPremium && (
                   <View style={[styles.premiumBadge, { backgroundColor: colors.accentLight }]}>
                     <Crown size={12} color={colors.accent} />
@@ -551,7 +553,7 @@ export default function SettingsScreen() {
               </View>
 
               <View style={styles.themeGrid}>
-                {premiumThemes.map((theme) => {
+                {premiumColorThemes.map((theme) => {
                   const isSelected = themeId === theme.id;
                   const previewColors = theme.previewColors;
                   const isLocked = !isPremium;
@@ -576,6 +578,57 @@ export default function SettingsScreen() {
                             <Crown size={18} color={colors.accent} />
                           </View>
                         )}
+                      </View>
+                      <View style={styles.themeInfo}>
+                        <Text style={[styles.themeName, { color: colors.primary }]}>{theme.name}</Text>
+                        {isSelected && <Check size={16} color={colors.accent} />}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.illustratedThemesHeader}>
+                <View>
+                  <Text style={[styles.themeSectionLabel, { color: colors.textMuted, marginBottom: 2 }]}>POEMCLOUD+ · ILLUSTRATED THEMES</Text>
+                  <Text style={[styles.illustratedSubtitle, { color: colors.textMuted }]}>Calm illustrated backgrounds designed for immersive reading.</Text>
+                </View>
+                {!isPremium && (
+                  <View style={[styles.premiumBadge, { backgroundColor: colors.accentLight }]}>
+                    <Crown size={12} color={colors.accent} />
+                    <Text style={[styles.premiumBadgeText, { color: colors.accent }]}>Premium</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.themeGrid}>
+                {illustratedThemes.map((theme) => {
+                  const isSelected = themeId === theme.id;
+                  const isLocked = !isPremium;
+                  
+                  return (
+                    <TouchableOpacity
+                      key={theme.id}
+                      style={[
+                        styles.themeCard,
+                        { borderColor: isSelected ? colors.accent : colors.border },
+                        isSelected && styles.themeCardSelected,
+                      ]}
+                      onPress={() => handleThemeSelect(theme.id)}
+                    >
+                      <View style={[styles.illustratedThemePreview]}>
+                        <ImageBackground
+                          source={{ uri: theme.backgroundImage }}
+                          style={styles.illustratedPreviewImage}
+                          resizeMode="cover"
+                        >
+                          <View style={[styles.illustratedPreviewOverlay, { backgroundColor: theme.overlayColor }]} />
+                          {isLocked && (
+                            <View style={styles.lockedOverlay}>
+                              <Crown size={18} color="#ffffff" />
+                            </View>
+                          )}
+                        </ImageBackground>
                       </View>
                       <View style={styles.themeInfo}>
                         <Text style={[styles.themeName, { color: colors.primary }]}>{theme.name}</Text>
@@ -995,9 +1048,34 @@ const styles = StyleSheet.create({
   },
   lockedOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  illustratedThemesHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginTop: 28,
+    marginBottom: 12,
+  },
+  illustratedSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+    opacity: 0.8,
+  },
+  illustratedThemePreview: {
+    height: 80,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  illustratedPreviewImage: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  illustratedPreviewOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
   themeInfo: {
     flexDirection: 'row',

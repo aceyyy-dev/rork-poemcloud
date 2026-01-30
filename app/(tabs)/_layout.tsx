@@ -7,9 +7,8 @@ import { useUser } from "@/contexts/UserContext";
 import { triggerHaptic } from "@/utils/haptics";
 
 export default function TabLayout() {
-  const { colors } = useTheme();
+  const { colors, isIllustrated } = useTheme();
   const { preferences } = useUser();
-  const router = useRouter();
 
   const hideTabBar = !preferences.hasCompletedOnboarding;
 
@@ -19,11 +18,14 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.tabBar.active,
         tabBarInactiveTintColor: colors.tabBar.inactive,
         tabBarStyle: hideTabBar ? { display: 'none' } : {
-          backgroundColor: colors.tabBar.background,
-          borderTopColor: colors.borderLight,
-          borderTopWidth: 1,
+          backgroundColor: isIllustrated ? colors.tabBar.background : colors.tabBar.background,
+          borderTopColor: isIllustrated ? 'transparent' : colors.borderLight,
+          borderTopWidth: isIllustrated ? 0 : 1,
           paddingTop: 8,
           height: Platform.OS === 'ios' ? 88 : 64,
+        },
+        sceneStyle: {
+          backgroundColor: isIllustrated ? 'transparent' : colors.background,
         },
         tabBarLabelStyle: {
           fontSize: 11,

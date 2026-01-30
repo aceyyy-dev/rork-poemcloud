@@ -67,7 +67,7 @@ export default function FeedScreen() {
 
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, isIllustrated } = useTheme();
   const { preferences, isLiked, isBookmarked, toggleLike, toggleBookmark, setPremium, markAsRead } = useUser();
   const [, setCurrentIndex] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -252,11 +252,13 @@ export default function FeedScreen() {
   }), [ITEM_HEIGHT]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.gradientStart, colors.background]}
-        style={styles.gradient}
-      />
+    <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
+      {!isIllustrated && (
+        <LinearGradient
+          colors={[colors.gradientStart, colors.background]}
+          style={styles.gradient}
+        />
+      )}
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
