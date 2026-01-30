@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { Animated, StyleSheet, View, Image } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UserProvider } from "@/contexts/UserContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
@@ -20,14 +20,14 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 
 const queryClient = new QueryClient();
 
-function IllustratedBackground({ gradient, overlay }: { gradient: string[]; overlay: string }) {
+function IllustratedBackground({ imageUrl, overlay }: { imageUrl: string; overlay: string }) {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <View style={[styles.gradientBase, { backgroundColor: gradient[0] }]} />
-      <View style={[styles.gradientLayer, { backgroundColor: gradient[1], top: '15%' }]} />
-      <View style={[styles.gradientLayer, { backgroundColor: gradient[2], top: '35%' }]} />
-      <View style={[styles.gradientLayer, { backgroundColor: gradient[3], top: '55%' }]} />
-      <View style={[styles.gradientLayer, { backgroundColor: gradient[4], top: '75%' }]} />
+      <Image
+        source={{ uri: imageUrl }}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
       <View style={[styles.overlayLayer, { backgroundColor: overlay }]} />
     </View>
   );
@@ -43,7 +43,7 @@ function RootLayoutNav() {
     <Animated.View style={[styles.container, { opacity: transitionOpacity }]}>
       {isIllustratedTheme && illustratedThemeData && (
         <IllustratedBackground 
-          gradient={illustratedThemeData.backgroundGradient} 
+          imageUrl={illustratedThemeData.backgroundImage} 
           overlay={illustratedThemeData.overlayColor} 
         />
       )}
@@ -135,14 +135,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  gradientBase: {
+  backgroundImage: {
     ...StyleSheet.absoluteFillObject,
-  },
-  gradientLayer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   overlayLayer: {
     ...StyleSheet.absoluteFillObject,

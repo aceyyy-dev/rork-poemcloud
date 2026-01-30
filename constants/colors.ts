@@ -149,7 +149,7 @@ export type IllustratedThemeDefinition = {
   isPremium: boolean;
   previewColors: { bg: string; card: string; accent: string };
   colors: ThemeColors;
-  backgroundGradient: string[];
+  backgroundImage: string;
   overlayColor: string;
 };
 
@@ -508,8 +508,8 @@ export const illustratedThemes: IllustratedThemeDefinition[] = [
     isPremium: true,
     previewColors: { bg: '#fef9f3', card: '#fffcf8', accent: '#d4a87a' },
     colors: morningLight,
-    backgroundGradient: ['#fef9f3', '#fdf5eb', '#fce8d5', '#f8e0c8', '#f5d8bc'],
-    overlayColor: 'rgba(255, 252, 248, 0.15)',
+    backgroundImage: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/hh2dm3amb2y21mlmcuccx',
+    overlayColor: 'rgba(255, 252, 248, 0.18)',
   },
   {
     id: 'golden-dusk',
@@ -517,8 +517,8 @@ export const illustratedThemes: IllustratedThemeDefinition[] = [
     isPremium: true,
     previewColors: { bg: '#e8a870', card: '#3a2820', accent: '#e8a870' },
     colors: goldenDusk,
-    backgroundGradient: ['#f5c090', '#e8a070', '#c87850', '#8a4a3a', '#4a2828'],
-    overlayColor: 'rgba(0, 0, 0, 0.25)',
+    backgroundImage: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/i4kl72fl2uk2oegdjd38k',
+    overlayColor: 'rgba(0, 0, 0, 0.22)',
   },
   {
     id: 'blue-hour',
@@ -526,8 +526,8 @@ export const illustratedThemes: IllustratedThemeDefinition[] = [
     isPremium: true,
     previewColors: { bg: '#1a2840', card: '#162032', accent: '#7a98c8' },
     colors: blueHour,
-    backgroundGradient: ['#2a3a58', '#1e2c48', '#162238', '#101a2a', '#0a1018'],
-    overlayColor: 'rgba(20, 30, 50, 0.2)',
+    backgroundImage: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/kgamohi2pttza4ofkctx6',
+    overlayColor: 'rgba(10, 20, 40, 0.18)',
   },
 ];
 

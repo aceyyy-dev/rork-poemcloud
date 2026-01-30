@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -603,7 +604,6 @@ export default function SettingsScreen() {
               <View style={styles.themeGrid}>
                 {illustratedThemes.map((theme) => {
                   const isSelected = themeId === theme.id;
-                  const gradientColors = theme.backgroundGradient;
                   const isLocked = !isPremium;
                   
                   return (
@@ -617,11 +617,11 @@ export default function SettingsScreen() {
                       onPress={() => handleThemeSelect(theme.id)}
                     >
                       <View style={[styles.themePreview, styles.illustratedPreview]}>
-                        <View style={[styles.illustratedGradient, { backgroundColor: gradientColors[0] }]}>
-                          <View style={[styles.gradientLayer1, { backgroundColor: gradientColors[1] }]} />
-                          <View style={[styles.gradientLayer2, { backgroundColor: gradientColors[2] }]} />
-                          <View style={[styles.gradientLayer3, { backgroundColor: gradientColors[3] }]} />
-                        </View>
+                        <Image
+                          source={{ uri: theme.backgroundImage }}
+                          style={styles.illustratedPreviewImage}
+                          resizeMode="cover"
+                        />
                         <View style={[styles.illustratedCardOverlay, { backgroundColor: theme.previewColors.card }]}>
                           <View style={[styles.themePreviewLine, { backgroundColor: theme.previewColors.accent }]} />
                           <View style={[styles.themePreviewLineShort, { backgroundColor: theme.previewColors.accent, opacity: 0.5 }]} />
@@ -1080,29 +1080,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: 0,
   },
-  illustratedGradient: {
+  illustratedPreviewImage: {
     ...StyleSheet.absoluteFillObject,
-  },
-  gradientLayer1: {
-    position: 'absolute',
-    top: '20%',
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  gradientLayer2: {
-    position: 'absolute',
-    top: '45%',
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  gradientLayer3: {
-    position: 'absolute',
-    top: '70%',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
   },
   illustratedCardOverlay: {
     position: 'absolute',
