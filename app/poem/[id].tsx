@@ -23,7 +23,6 @@ import {
   Crown,
   Pause,
   Search,
-  Play,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -66,13 +65,14 @@ export default function PoemDetailScreen() {
   const [translationLanguage, setTranslationLanguage] = useState<string | null>(null);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [showListenModal, setShowListenModal] = useState(false);
-  const { toggleSpeech, isSpeakingPoem, stopSpeaking, progress, getRemainingTime, seekTo, duration } = useTTS();
+  const { toggleSpeech, isSpeakingPoem, stopSpeaking, progress, getRemainingTime, seekTo } = useTTS();
   const { enterProtectedScreen, exitProtectedScreen } = useScreenCapture();
   const [languageSearch, setLanguageSearch] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [isAIGenerated, setIsAIGenerated] = useState(true);
-  const [translationCache, setTranslationCache] = useState<Record<string, string>>({});
+  const [translationCache] = useState<Record<string, string>>({});
   const [translationError, setTranslationError] = useState<string | null>(null);
+  const [isTranslating] = useState(false);
   
   const likeScale = useRef(new Animated.Value(1)).current;
   const bookmarkScale = useRef(new Animated.Value(1)).current;
@@ -83,7 +83,7 @@ export default function PoemDetailScreen() {
     if (poem) {
       markAsRead(poem.id);
     }
-  }, [poem?.id, markAsRead]);
+  }, [poem?.id, markAsRead, poem]);
 
   React.useEffect(() => {
     enterProtectedScreen();
@@ -155,7 +155,7 @@ export default function PoemDetailScreen() {
     setShowLanguagePicker(true);
   };
 
-  const [isTranslating, setIsTranslating] = useState(false);
+
 
   const handleSelectLanguage = (languageName: string, languageCode: string) => {
     if (!poem) return;
@@ -461,7 +461,6 @@ interface AudioPlayerInlineProps {
 }
 
 function AudioPlayerInline({ progress, remainingTime, onToggle, onSeek, colors }: AudioPlayerInlineProps) {
-  const progressBarRef = React.useRef<View>(null);
   const progressBarWidth = React.useRef(0);
   const [localProgress, setLocalProgress] = React.useState(progress);
   const isDragging = React.useRef(false);

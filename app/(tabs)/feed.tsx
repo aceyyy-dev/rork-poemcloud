@@ -34,7 +34,7 @@ import { useScreenCapture } from '@/contexts/ScreenCaptureContext';
 import ScreenCaptureOverlay from '@/components/ScreenCaptureOverlay';
 
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 const CARD_PADDING = 20;
 const ACTION_RAIL_WIDTH = 52;
 
@@ -69,7 +69,7 @@ export default function FeedScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { preferences, isLiked, isBookmarked, toggleLike, toggleBookmark, setPremium, markAsRead } = useUser();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [, setCurrentIndex] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeature, setPremiumFeature] = useState<string>();
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
@@ -81,8 +81,8 @@ export default function FeedScreen() {
   const { stopSpeaking, toggleSpeech, isSpeakingPoem, hasActiveAudio, isPaused, progress, getRemainingTime, seekTo, duration } = useTTS();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePoem, setSharePoem] = useState<Poem | null>(null);
-  const [translationCache, setTranslationCache] = useState<Record<string, string>>({});
-  const [translationError, setTranslationError] = useState<string | null>(null);
+  const [translationCache] = useState<Record<string, string>>({});
+  const [, setTranslationError] = useState<string | null>(null);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [playlistPoem, setPlaylistPoem] = useState<Poem | null>(null);
   const { enterProtectedScreen, exitProtectedScreen } = useScreenCapture();
@@ -121,23 +121,23 @@ export default function FeedScreen() {
     return sorted;
   }, [preferences.moods]);
 
-  const handlePremiumAction = (feature: string) => {
+  const handlePremiumAction = useCallback((feature: string) => {
     if (!preferences.isPremium) {
       setPremiumFeature(feature);
       setShowPremiumModal(true);
     }
-  };
+  }, [preferences.isPremium]);
 
-  const handleTranslate = (poemId: string) => {
+  const handleTranslate = useCallback((poemId: string) => {
     if (!preferences.isPremium) {
       handlePremiumAction('Translations');
       return;
     }
     setSelectedPoemForTranslate(poemId);
     setShowLanguagePicker(true);
-  };
+  }, [preferences.isPremium, handlePremiumAction]);
 
-  const [isTranslating, setIsTranslating] = useState(false);
+  const [isTranslating] = useState(false);
 
   const handleSelectLanguage = (languageName: string, languageCode: string) => {
     if (!selectedPoemForTranslate) return;
@@ -243,7 +243,7 @@ export default function FeedScreen() {
       onPoetPress={() => router.push(`/poet/${poem.poetId}`)}
       colors={colors}
     />
-  ), [isLiked, isBookmarked, preferences.isPremium, toggleLike, toggleBookmark, router, colors, translatedPoems, showTranslation, isSpeakingPoem, hasActiveAudio, isPaused, ITEM_HEIGHT, handleListen, progress, getRemainingTime, handleAddToPlaylist]);
+  ), [isLiked, isBookmarked, preferences.isPremium, toggleLike, toggleBookmark, router, colors, translatedPoems, showTranslation, isSpeakingPoem, hasActiveAudio, isPaused, ITEM_HEIGHT, handleListen, progress, getRemainingTime, handleAddToPlaylist, handleShare, duration, seekTo, handleTranslate]);
 
   const getItemLayout = useCallback((_: any, index: number) => ({
     length: ITEM_HEIGHT,

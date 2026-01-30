@@ -59,7 +59,7 @@ export default function ScreenCaptureOverlay({ onUpgrade }: Props) {
         }),
       ]).start();
     }
-  }, [showCaptureOverlay]);
+  }, [showCaptureOverlay, fadeAnim, scaleAnim]);
 
   const handleUpgrade = () => {
     if (Platform.OS !== 'web') {

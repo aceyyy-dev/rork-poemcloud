@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Animated,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -22,7 +23,7 @@ import PremiumModal from '@/components/PremiumModal';
 import ListenPremiumModal from '@/components/ListenPremiumModal';
 import PoemShareCard from '@/components/PoemShareCard';
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
+
 import { useTTS } from '@/contexts/TTSContext';
 import { useScreenCapture } from '@/contexts/ScreenCaptureContext';
 import ScreenCaptureOverlay from '@/components/ScreenCaptureOverlay';
@@ -50,7 +51,7 @@ export default function HomeScreen() {
         useNativeDriver: true,
       }).start();
     }
-  }, [preferences.hasCompletedOnboarding]);
+  }, [preferences.hasCompletedOnboarding, fadeAnim]);
 
   useEffect(() => {
     if (preferences.hasCompletedOnboarding) {
@@ -162,7 +163,7 @@ export default function HomeScreen() {
           >
             <View style={styles.section}>
               <View style={styles.sectionHeaderRow}>
-                <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>TODAY'S POEM</Text>
+                <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>TODAY&apos;S POEM</Text>
                 <Text style={[styles.dateText, { color: colors.textMuted }]}>{getFormattedDate()}</Text>
               </View>
               <TouchableOpacity
