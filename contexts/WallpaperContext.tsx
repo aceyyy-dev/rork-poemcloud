@@ -33,7 +33,7 @@ export const wallpapers: WallpaperDefinition[] = [
   {
     id: 'blue-hour',
     name: 'Blue Hour',
-    imageUrl: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/r1rliyesdxtm38f72neip',
+    imageUrl: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/2r6hfyvm2dk8t8uqhst30',
     lightOverlay: 'rgba(255, 255, 255, 0.45)',
     darkOverlay: 'rgba(13, 20, 30, 0.45)',
   },
