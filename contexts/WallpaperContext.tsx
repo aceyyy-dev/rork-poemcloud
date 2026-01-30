@@ -19,23 +19,23 @@ export const wallpapers: WallpaperDefinition[] = [
   {
     id: 'morning-light',
     name: 'Morning Light',
-    imageUrl: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/iqde3s6qmurbjc34sreq0',
-    lightOverlay: 'rgba(255, 255, 255, 0.45)',
-    darkOverlay: 'rgba(13, 26, 36, 0.65)',
+    imageUrl: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/q3i73qdzouovfn2ocd581',
+    lightOverlay: 'rgba(255, 255, 255, 0.35)',
+    darkOverlay: 'rgba(13, 26, 36, 0.55)',
   },
   {
     id: 'golden-dusk',
     name: 'Golden Dusk',
-    imageUrl: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/5188506ipdi0547yfi1d0',
-    lightOverlay: 'rgba(255, 250, 245, 0.50)',
-    darkOverlay: 'rgba(13, 26, 36, 0.60)',
+    imageUrl: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/npbdzlqetwcden1e1rr5w',
+    lightOverlay: 'rgba(255, 250, 245, 0.40)',
+    darkOverlay: 'rgba(13, 26, 36, 0.50)',
   },
   {
     id: 'blue-hour',
     name: 'Blue Hour',
-    imageUrl: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/evp4qzzm30fatatmq0u53',
-    lightOverlay: 'rgba(255, 255, 255, 0.55)',
-    darkOverlay: 'rgba(13, 20, 30, 0.55)',
+    imageUrl: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/r1rliyesdxtm38f72neip',
+    lightOverlay: 'rgba(255, 255, 255, 0.45)',
+    darkOverlay: 'rgba(13, 20, 30, 0.45)',
   },
 ];
 
