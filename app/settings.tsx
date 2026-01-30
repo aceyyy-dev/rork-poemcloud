@@ -9,6 +9,7 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -26,11 +27,14 @@ import {
   LogOut,
   Trash2,
   Palette,
+  Scan,
+  Fingerprint,
 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
 import { usePurchases } from '@/contexts/PurchasesContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBiometric } from '@/contexts/BiometricContext';
 import { countries } from '@/mocks/countries';
 import { Mood } from '@/types';
 import { premiumThemes, ThemeId } from '@/constants/colors';
@@ -46,7 +50,16 @@ export default function SettingsScreen() {
   const { colors, themeId, setTheme, isDark, currentThemeName, isPremiumTheme } = useTheme();
   const { preferences, updatePreferences } = useUser();
   const { isPremium, restorePurchases, isRestoring, manageSubscription, willRenew, expirationDate } = usePurchases();
-  const { isLoggedIn, user, signOut } = useAuth();
+  const { isLoggedIn, user, signOut, token } = useAuth();
+  const { 
+    isAvailable: biometricAvailable, 
+    isEnrolled: biometricEnrolled, 
+    isEnabled: biometricEnabled,
+    getBiometricTypeName,
+    biometricType,
+    enableBiometric,
+    disableBiometric,
+  } = useBiometric();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showMoodsModal, setShowMoodsModal] = useState(false);
   const [showCountriesModal, setShowCountriesModal] = useState(false);
@@ -54,6 +67,34 @@ export default function SettingsScreen() {
   const [selectedMoods, setSelectedMoods] = useState<Mood[]>(preferences.moods);
   const [selectedCountries, setSelectedCountries] = useState<string[]>(preferences.countries);
   const [dailyNotification, setDailyNotification] = useState(true);
+  const [isBiometricToggling, setIsBiometricToggling] = useState(false);
+
+  const biometricName = getBiometricTypeName();
+  const isFaceId = biometricType === 'face' && Platform.OS === 'ios';
+  const canShowBiometricSetting = biometricAvailable && biometricEnrolled && isLoggedIn && Platform.OS !== 'web';
+
+  const handleBiometricToggle = async (value: boolean) => {
+    if (isBiometricToggling) return;
+    setIsBiometricToggling(true);
+    triggerHaptic('light');
+    
+    try {
+      if (value && user && token) {
+        const success = await enableBiometric(user.id, token);
+        if (success) {
+          triggerHaptic('success');
+          Alert.alert('Enabled', `${biometricName} login is now enabled.`);
+        }
+      } else {
+        await disableBiometric();
+        Alert.alert('Disabled', `${biometricName} login has been disabled.`);
+      }
+    } catch (error) {
+      console.error('[Settings] Biometric toggle error:', error);
+    } finally {
+      setIsBiometricToggling(false);
+    }
+  };
 
   const toggleMood = (mood: Mood) => {
     triggerHaptic('light');
@@ -331,6 +372,53 @@ export default function SettingsScreen() {
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>ACCOUNT</Text>
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                {canShowBiometricSetting && (
+                  <View style={[styles.settingRow, { borderBottomColor: colors.borderLight }]}>
+                    <View style={styles.settingLeft}>
+                      {isFaceId ? (
+                        <Scan size={20} color={colors.textLight} strokeWidth={1.5} />
+                      ) : (
+                        <Fingerprint size={20} color={colors.textLight} strokeWidth={1.5} />
+                      )}
+                      <View style={styles.settingText}>
+                        <Text style={[styles.settingLabel, { color: colors.primary }]}>
+                          {biometricName} Login
+                        </Text>
+                        <Text style={[styles.settingValue, { color: colors.textMuted }]}>
+                          Quick sign in with {biometricName}
+                        </Text>
+                      </View>
+                    </View>
+                    <Switch
+                      value={biometricEnabled}
+                      onValueChange={handleBiometricToggle}
+                      trackColor={{ false: colors.border, true: colors.accent }}
+                      thumbColor={colors.textWhite}
+                      disabled={isBiometricToggling}
+                    />
+                  </View>
+                )}
+
+                {!biometricEnrolled && biometricAvailable && isLoggedIn && Platform.OS !== 'web' && (
+                  <View style={[styles.settingRow, { borderBottomColor: colors.borderLight }]}>
+                    <View style={styles.settingLeft}>
+                      {isFaceId ? (
+                        <Scan size={20} color={colors.textMuted} strokeWidth={1.5} />
+                      ) : (
+                        <Fingerprint size={20} color={colors.textMuted} strokeWidth={1.5} />
+                      )}
+                      <View style={styles.settingText}>
+                        <Text style={[styles.settingLabel, { color: colors.textMuted }]}>
+                          {biometricName} Login
+                        </Text>
+                        <Text style={[styles.settingValue, { color: colors.textMuted }]}>
+                          Set up {biometricName} in device settings
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
                 <TouchableOpacity 
                   style={[styles.settingRow, { borderBottomColor: colors.borderLight }]}
                   onPress={() => {

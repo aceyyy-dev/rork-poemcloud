@@ -1,9 +1,14 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
 
 const AUTH_STORAGE_KEY = 'poemcloud_auth';
+const BIOMETRIC_TOKEN_KEY = 'poemcloud_biometric_token';
+const BIOMETRIC_USER_ID_KEY = 'poemcloud_biometric_user_id';
+const BIOMETRIC_ENABLED_KEY = 'poemcloud_biometric_enabled';
 
 export interface AuthUser {
   id: string;
@@ -110,9 +115,36 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const signOut = useCallback(async () => {
     console.log('[Auth] Sign out');
     await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+    if (Platform.OS !== 'web') {
+      await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
+      await SecureStore.deleteItemAsync(BIOMETRIC_USER_ID_KEY);
+    }
+    await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
     setAuthState({ user: null, token: null });
     queryClient.setQueryData(['auth'], { user: null, token: null });
   }, [queryClient]);
+
+  const signInWithBiometric = useCallback(async (userId: string, token: string) => {
+    console.log('[Auth] Sign in with biometric, userId:', userId);
+    const stored = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+    if (stored) {
+      const parsed: AuthState = JSON.parse(stored);
+      if (parsed.user && parsed.user.id === userId) {
+        setAuthState(parsed);
+        queryClient.setQueryData(['auth'], parsed);
+        return parsed.user;
+      }
+    }
+    const mockUser: AuthUser = {
+      id: userId,
+      email: 'biometric@user.com',
+      name: 'User',
+      isPremium: false,
+      createdAt: new Date().toISOString(),
+    };
+    await saveAuthMutation.mutateAsync({ user: mockUser, token });
+    return mockUser;
+  }, [saveAuthMutation.mutateAsync, queryClient]);
 
   const updateUserPremiumStatus = useCallback(async (isPremium: boolean) => {
     if (!authState.user) return;
@@ -130,6 +162,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     signUpWithEmail,
     signInWithApple,
     signInWithGoogle,
+    signInWithBiometric,
     signOut,
     updateUserPremiumStatus,
   };

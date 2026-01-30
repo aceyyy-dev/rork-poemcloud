@@ -11,6 +11,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { TTSProvider } from "@/contexts/TTSContext";
 import { PlaylistProvider } from "@/contexts/PlaylistContext";
 import { ScreenCaptureProvider } from "@/contexts/ScreenCaptureContext";
+import { BiometricProvider } from "@/contexts/BiometricContext";
 
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -124,15 +125,17 @@ export default function RootLayout() {
           <ThemeProvider>
             <PurchasesProvider>
               <AuthProvider>
-                <UserProvider>
-                  <PlaylistProvider>
-                    <TTSProvider>
+                <BiometricProvider>
+                  <UserProvider>
+                    <PlaylistProvider>
+                      <TTSProvider>
                         <ScreenCaptureProvider>
                           <RootLayoutNav />
                         </ScreenCaptureProvider>
                       </TTSProvider>
-                  </PlaylistProvider>
-                </UserProvider>
+                    </PlaylistProvider>
+                  </UserProvider>
+                </BiometricProvider>
               </AuthProvider>
             </PurchasesProvider>
           </ThemeProvider>
