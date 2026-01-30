@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -31,6 +31,9 @@ import {
   Palette,
   Scan,
   Fingerprint,
+  Mail,
+  Smartphone,
+  Send,
 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useWallpaper, wallpapers, WallpaperId } from '@/contexts/WallpaperContext';
@@ -43,6 +46,7 @@ import { Mood } from '@/types';
 import { premiumColorThemes, ThemeId } from '@/constants/colors';
 import PremiumModal from '@/components/PremiumModal';
 import { triggerHaptic } from '@/utils/haptics';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 const MOODS: Mood[] = ['calm', 'sad', 'love', 'hope', 'melancholy', 'healing', 'longing', 'joy', 'reflection'];
 const MIN_MOODS = 3;
@@ -71,8 +75,23 @@ export default function SettingsScreen() {
   const [showWallpaperModal, setShowWallpaperModal] = useState(false);
   const [selectedMoods, setSelectedMoods] = useState<Mood[]>(preferences.moods);
   const [selectedCountries, setSelectedCountries] = useState<string[]>(preferences.countries);
-  const [dailyNotification, setDailyNotification] = useState(true);
   const [isBiometricToggling, setIsBiometricToggling] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [tempEmail, setTempEmail] = useState('');
+  const [tempPhone, setTempPhone] = useState('');
+
+  const {
+    preferences: notifPrefs,
+    toggleDailyPush,
+    toggleDailyEmail,
+    toggleDailySms,
+    setEmailAddress,
+    setPhoneNumber,
+    smsAvailable,
+    emailAvailable,
+    sendDailyPoemEmail,
+    sendDailyPoemSms,
+  } = useNotifications();
 
   const biometricName = getBiometricTypeName();
   const isFaceId = biometricType === 'face' && Platform.OS === 'ios';
@@ -293,23 +312,28 @@ export default function SettingsScreen() {
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
 
-              <View style={styles.settingRow}>
+              <TouchableOpacity 
+                style={styles.settingRow}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setTempEmail(notifPrefs.emailAddress);
+                  setTempPhone(notifPrefs.phoneNumber);
+                  setShowNotificationModal(true);
+                }}
+              >
                 <View style={styles.settingLeft}>
                   <Bell size={20} color={colors.textLight} strokeWidth={1.5} />
                   <View style={styles.settingText}>
-                    <Text style={[styles.settingLabel, { color: colors.primary }]}>Daily Poem Notification</Text>
+                    <Text style={[styles.settingLabel, { color: colors.primary }]}>Daily Poem Delivery</Text>
                     <Text style={[styles.settingValue, { color: colors.textMuted }]}>
-                      Receive a poem each morning
+                      {notifPrefs.dailyPushEnabled || notifPrefs.dailyEmailEnabled || notifPrefs.dailySmsEnabled
+                        ? 'Enabled'
+                        : 'Not configured'}
                     </Text>
                   </View>
                 </View>
-                <Switch
-                  value={dailyNotification}
-                  onValueChange={setDailyNotification}
-                  trackColor={{ false: colors.border, true: colors.accent }}
-                  thumbColor={colors.textWhite}
-                />
-              </View>
+                <ChevronRight size={20} color={colors.textMuted} />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -865,6 +889,181 @@ export default function SettingsScreen() {
           </SafeAreaView>
         </View>
       </Modal>
+
+      <Modal
+        visible={showNotificationModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowNotificationModal(false)}
+      >
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <SafeAreaView style={styles.modalSafeArea} edges={['top', 'bottom']}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setShowNotificationModal(false)}>
+                <X size={24} color={colors.primary} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: colors.primary }]}>Daily Poem Delivery</Text>
+              <TouchableOpacity onPress={() => {
+                setEmailAddress(tempEmail);
+                setPhoneNumber(tempPhone);
+                setShowNotificationModal(false);
+              }}>
+                <Check size={24} color={colors.accent} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.themeScroll} showsVerticalScrollIndicator={false}>
+              <Text style={[styles.notifDescription, { color: colors.textMuted }]}>
+                Get a beautiful poem delivered to you every day
+              </Text>
+
+              <Text style={[styles.themeSectionLabel, { color: colors.textMuted }]}>DELIVERY METHODS</Text>
+              
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                <View style={[styles.settingRow, { borderBottomColor: colors.borderLight }]}>
+                  <View style={styles.settingLeft}>
+                    <Bell size={20} color={colors.textLight} strokeWidth={1.5} />
+                    <View style={styles.settingText}>
+                      <Text style={[styles.settingLabel, { color: colors.primary }]}>Push Notifications</Text>
+                      <Text style={[styles.settingValue, { color: colors.textMuted }]}>
+                        Receive in-app notifications
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={notifPrefs.dailyPushEnabled}
+                    onValueChange={toggleDailyPush}
+                    trackColor={{ false: colors.border, true: colors.accent }}
+                    thumbColor={colors.textWhite}
+                  />
+                </View>
+
+                <View style={[styles.settingRow, { borderBottomColor: colors.borderLight }]}>
+                  <View style={styles.settingLeft}>
+                    <Mail size={20} color={colors.textLight} strokeWidth={1.5} />
+                    <View style={styles.settingText}>
+                      <Text style={[styles.settingLabel, { color: colors.primary }]}>Email</Text>
+                      <Text style={[styles.settingValue, { color: colors.textMuted }]}>
+                        {emailAvailable ? 'Receive poems via email' : 'Email not available'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={notifPrefs.dailyEmailEnabled}
+                    onValueChange={toggleDailyEmail}
+                    trackColor={{ false: colors.border, true: colors.accent }}
+                    thumbColor={colors.textWhite}
+                    disabled={!emailAvailable}
+                  />
+                </View>
+
+                {Platform.OS !== 'web' && (
+                  <View style={styles.settingRow}>
+                    <View style={styles.settingLeft}>
+                      <Smartphone size={20} color={colors.textLight} strokeWidth={1.5} />
+                      <View style={styles.settingText}>
+                        <Text style={[styles.settingLabel, { color: colors.primary }]}>SMS</Text>
+                        <Text style={[styles.settingValue, { color: colors.textMuted }]}>
+                          {smsAvailable ? 'Receive poems via text' : 'SMS not available'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Switch
+                      value={notifPrefs.dailySmsEnabled}
+                      onValueChange={toggleDailySms}
+                      trackColor={{ false: colors.border, true: colors.accent }}
+                      thumbColor={colors.textWhite}
+                      disabled={!smsAvailable}
+                    />
+                  </View>
+                )}
+              </View>
+
+              {(notifPrefs.dailyEmailEnabled || notifPrefs.dailySmsEnabled) && (
+                <>
+                  <Text style={[styles.themeSectionLabel, { color: colors.textMuted, marginTop: 24 }]}>CONTACT INFO</Text>
+                  
+                  <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                    {notifPrefs.dailyEmailEnabled && (
+                      <View style={[styles.inputRow, { borderBottomColor: colors.borderLight }]}>
+                        <Mail size={20} color={colors.textMuted} />
+                        <TextInput
+                          style={[styles.input, { color: colors.text }]}
+                          placeholder="Enter your email"
+                          placeholderTextColor={colors.textMuted}
+                          value={tempEmail}
+                          onChangeText={setTempEmail}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
+                      </View>
+                    )}
+                    
+                    {notifPrefs.dailySmsEnabled && Platform.OS !== 'web' && (
+                      <View style={styles.inputRow}>
+                        <Smartphone size={20} color={colors.textMuted} />
+                        <TextInput
+                          style={[styles.input, { color: colors.text }]}
+                          placeholder="Enter your phone number"
+                          placeholderTextColor={colors.textMuted}
+                          value={tempPhone}
+                          onChangeText={setTempPhone}
+                          keyboardType="phone-pad"
+                        />
+                      </View>
+                    )}
+                  </View>
+                </>
+              )}
+
+              <Text style={[styles.themeSectionLabel, { color: colors.textMuted, marginTop: 24 }]}>TEST DELIVERY</Text>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                {emailAvailable && notifPrefs.emailAddress && (
+                  <TouchableOpacity 
+                    style={[styles.settingRow, { borderBottomColor: colors.borderLight }]}
+                    onPress={() => {
+                      triggerHaptic('light');
+                      sendDailyPoemEmail();
+                    }}
+                  >
+                    <View style={styles.settingLeft}>
+                      <Send size={20} color={colors.accent} strokeWidth={1.5} />
+                      <Text style={[styles.settingLabel, { color: colors.accent }]}>Send Test Email</Text>
+                    </View>
+                    <ChevronRight size={20} color={colors.textMuted} />
+                  </TouchableOpacity>
+                )}
+                
+                {smsAvailable && notifPrefs.phoneNumber && Platform.OS !== 'web' && (
+                  <TouchableOpacity 
+                    style={styles.settingRow}
+                    onPress={() => {
+                      triggerHaptic('light');
+                      sendDailyPoemSms();
+                    }}
+                  >
+                    <View style={styles.settingLeft}>
+                      <Send size={20} color={colors.accent} strokeWidth={1.5} />
+                      <Text style={[styles.settingLabel, { color: colors.accent }]}>Send Test SMS</Text>
+                    </View>
+                    <ChevronRight size={20} color={colors.textMuted} />
+                  </TouchableOpacity>
+                )}
+
+                {!notifPrefs.emailAddress && !notifPrefs.phoneNumber && (
+                  <View style={styles.settingRow}>
+                    <Text style={[styles.settingValue, { color: colors.textMuted }]}>
+                      Add email or phone number to test delivery
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </SafeAreaView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1211,5 +1410,22 @@ const styles = StyleSheet.create({
   },
   wallpaperDesc: {
     fontSize: 12,
+  },
+  notifDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 14,
+    borderBottomWidth: 1,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 0,
   },
 });

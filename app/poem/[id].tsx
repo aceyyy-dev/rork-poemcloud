@@ -25,6 +25,8 @@ import {
   Search,
   Play,
   XCircle,
+  Copy,
+  Check,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -40,6 +42,7 @@ import PoemShareCard from '@/components/PoemShareCard';
 import { useScreenCapture } from '@/contexts/ScreenCaptureContext';
 import ScreenCaptureOverlay from '@/components/ScreenCaptureOverlay';
 import { translateWithAI, SUPPORTED_LANGUAGES } from '@/utils/translation';
+import * as Clipboard from 'expo-clipboard';
 
 
 
@@ -64,6 +67,8 @@ export default function PoemDetailScreen() {
   const translationCacheRef = useRef<Record<string, string>>({});
   const [translationError, setTranslationError] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [copiedPoem, setCopiedPoem] = useState(false);
+  const [copiedContext, setCopiedContext] = useState(false);
   
   const likeScale = useRef(new Animated.Value(1)).current;
   const bookmarkScale = useRef(new Animated.Value(1)).current;
@@ -316,9 +321,32 @@ export default function PoemDetailScreen() {
             </View>
           )}
 
-          <Text style={[styles.poemText, { color: colors.text }]}>
-            {showTranslation && translatedText ? translatedText : poem.text}
-          </Text>
+          <View style={styles.poemTextContainer}>
+            <Text style={[styles.poemText, { color: colors.text }]}>
+              {showTranslation && translatedText ? translatedText : poem.text}
+            </Text>
+            <TouchableOpacity
+              style={[styles.copyButton, { backgroundColor: colors.surfaceSecondary }]}
+              onPress={async () => {
+                const textToCopy = showTranslation && translatedText ? translatedText : poem.text;
+                await Clipboard.setStringAsync(textToCopy);
+                setCopiedPoem(true);
+                if (Platform.OS !== 'web') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                setTimeout(() => setCopiedPoem(false), 2000);
+              }}
+            >
+              {copiedPoem ? (
+                <Check size={16} color={colors.accent} />
+              ) : (
+                <Copy size={16} color={colors.textMuted} />
+              )}
+              <Text style={[styles.copyButtonText, { color: copiedPoem ? colors.accent : colors.textMuted }]}>
+                {copiedPoem ? 'Copied!' : 'Copy poem'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {showAudioUI && (
             <AudioPlayerInline
@@ -346,7 +374,26 @@ export default function PoemDetailScreen() {
 
           {poem.culturalContext && (
             <View style={[styles.contextCard, { backgroundColor: colors.surfaceSecondary }]}>
-              <Text style={[styles.contextTitle, { color: colors.primary }]}>Cultural Context</Text>
+              <View style={styles.contextHeader}>
+                <Text style={[styles.contextTitle, { color: colors.primary }]}>Cultural Context</Text>
+                <TouchableOpacity
+                  style={[styles.contextCopyButton, { backgroundColor: colors.surface }]}
+                  onPress={async () => {
+                    await Clipboard.setStringAsync(poem.culturalContext || '');
+                    setCopiedContext(true);
+                    if (Platform.OS !== 'web') {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }
+                    setTimeout(() => setCopiedContext(false), 2000);
+                  }}
+                >
+                  {copiedContext ? (
+                    <Check size={14} color={colors.accent} />
+                  ) : (
+                    <Copy size={14} color={colors.textMuted} />
+                  )}
+                </TouchableOpacity>
+              </View>
               <Text style={[styles.contextText, { color: colors.text }]}>{poem.culturalContext}</Text>
             </View>
           )}
@@ -634,7 +681,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 32,
     letterSpacing: 0.2,
-    marginBottom: 24,
   },
   audioPlayer: {
     flexDirection: 'row',
@@ -716,14 +762,43 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 24,
   },
+  contextHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   contextTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 10,
+  },
+  contextCopyButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   contextText: {
     fontSize: 15,
     lineHeight: 24,
+  },
+  poemTextContainer: {
+    marginBottom: 24,
+  },
+  copyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginTop: 16,
+  },
+  copyButtonText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
   bottomBar: {
     flexDirection: 'row',
