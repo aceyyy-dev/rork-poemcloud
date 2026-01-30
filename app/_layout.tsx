@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
+import { Animated, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UserProvider } from "@/contexts/UserContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
@@ -18,9 +19,10 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
-  const { colors } = useTheme();
+  const { colors, transitionOpacity } = useTheme();
   
   return (
+    <Animated.View style={[styles.container, { opacity: transitionOpacity }]}>
     <Stack
       screenOptions={{
         headerBackTitle: "Back",
@@ -98,8 +100,15 @@ function RootLayoutNav() {
         }}
       />
     </Stack>
+    </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 export default function RootLayout() {
   useEffect(() => {

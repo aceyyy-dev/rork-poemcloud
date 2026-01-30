@@ -28,6 +28,7 @@ import {
   FileText,
   LogOut,
   Trash2,
+  Palette,
 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
@@ -35,6 +36,7 @@ import { usePurchases } from '@/contexts/PurchasesContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { countries } from '@/mocks/countries';
 import { Mood } from '@/types';
+import { premiumThemes, ThemeId } from '@/constants/colors';
 import PremiumModal from '@/components/PremiumModal';
 import { triggerHaptic } from '@/utils/haptics';
 
@@ -44,13 +46,14 @@ const MAX_MOODS = 6;
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { colors, themeMode, setTheme } = useTheme();
+  const { colors, themeId, setTheme, isDark, appearanceMode, setAppearance, currentThemeName, isPremiumTheme } = useTheme();
   const { preferences, updatePreferences } = useUser();
   const { isPremium, restorePurchases, isRestoring, manageSubscription, willRenew, expirationDate } = usePurchases();
   const { isLoggedIn, user, signOut } = useAuth();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showMoodsModal, setShowMoodsModal] = useState(false);
   const [showCountriesModal, setShowCountriesModal] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
   const [selectedMoods, setSelectedMoods] = useState<Mood[]>(preferences.moods);
   const [selectedCountries, setSelectedCountries] = useState<string[]>(preferences.countries);
   const [dailyNotification, setDailyNotification] = useState(true);
@@ -106,7 +109,26 @@ export default function SettingsScreen() {
     setShowCountriesModal(true);
   };
 
-  const themeOptions = [
+  const handleThemeSelect = (newThemeId: ThemeId) => {
+    const isPremiumThemeSelection = premiumThemes.some(t => t.id === newThemeId);
+    
+    if (isPremiumThemeSelection && !isPremium) {
+      triggerHaptic('medium');
+      setShowThemeModal(false);
+      setTimeout(() => setShowPremiumModal(true), 300);
+      return;
+    }
+    
+    triggerHaptic('light');
+    setTheme(newThemeId);
+  };
+
+  const handleAppearanceChange = (mode: 'light' | 'dark' | 'system') => {
+    triggerHaptic('light');
+    setAppearance(mode);
+  };
+
+  const appearanceOptions = [
     { value: 'light' as const, label: 'Light', icon: Sun },
     { value: 'dark' as const, label: 'Dark', icon: Moon },
     { value: 'system' as const, label: 'System', icon: Smartphone },
@@ -133,39 +155,60 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>APPEARANCE</Text>
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.cardLabel, { color: colors.primary }]}>Theme</Text>
-              <View style={styles.themeOptions}>
-                {themeOptions.map((option) => {
-                  const Icon = option.icon;
-                  const isSelected = themeMode === option.value;
-                  return (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={[
-                        styles.themeOption,
-                        { backgroundColor: colors.surfaceSecondary, borderColor: colors.border },
-                        isSelected && { borderColor: colors.accent, backgroundColor: colors.accentLight },
-                      ]}
-                      onPress={() => { triggerHaptic('light'); setTheme(option.value); }}
-                    >
-                      <Icon
-                        size={20}
-                        color={isSelected ? colors.accent : colors.textMuted}
-                        strokeWidth={1.5}
-                      />
-                      <Text
-                        style={[
-                          styles.themeOptionText,
-                          { color: colors.textMuted },
-                          isSelected && { color: colors.accent, fontWeight: '600' },
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+              <TouchableOpacity 
+                style={[styles.settingRow, { borderBottomColor: colors.borderLight }]}
+                onPress={() => { triggerHaptic('light'); setShowThemeModal(true); }}
+              >
+                <View style={styles.settingLeft}>
+                  <Palette size={20} color={colors.textLight} strokeWidth={1.5} />
+                  <View style={styles.settingText}>
+                    <Text style={[styles.settingLabel, { color: colors.primary }]}>Theme</Text>
+                    <Text style={[styles.settingValue, { color: colors.textMuted }]}>
+                      {currentThemeName}
+                      {isPremiumTheme && ' ✦'}
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+
+              {isPremiumTheme && (
+                <View style={styles.appearanceSection}>
+                  <Text style={[styles.appearanceLabel, { color: colors.primary }]}>Appearance</Text>
+                  <View style={styles.appearanceOptions}>
+                    {appearanceOptions.map((option) => {
+                      const Icon = option.icon;
+                      const isSelected = appearanceMode === option.value;
+                      return (
+                        <TouchableOpacity
+                          key={option.value}
+                          style={[
+                            styles.appearanceOption,
+                            { backgroundColor: colors.surfaceSecondary, borderColor: colors.border },
+                            isSelected && { borderColor: colors.accent, backgroundColor: colors.accentLight },
+                          ]}
+                          onPress={() => handleAppearanceChange(option.value)}
+                        >
+                          <Icon
+                            size={18}
+                            color={isSelected ? colors.accent : colors.textMuted}
+                            strokeWidth={1.5}
+                          />
+                          <Text
+                            style={[
+                              styles.appearanceOptionText,
+                              { color: colors.textMuted },
+                              isSelected && { color: colors.accent, fontWeight: '600' as const },
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
             </View>
           </View>
 
@@ -410,6 +453,108 @@ export default function SettingsScreen() {
       />
 
       <Modal
+        visible={showThemeModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowThemeModal(false)}
+      >
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <SafeAreaView style={styles.modalSafeArea} edges={['top', 'bottom']}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setShowThemeModal(false)}>
+                <X size={24} color={colors.primary} />
+              </TouchableOpacity>
+              <Text style={[styles.modalTitle, { color: colors.primary }]}>Choose Theme</Text>
+              <View style={{ width: 24 }} />
+            </View>
+
+            <ScrollView style={styles.themeScroll} showsVerticalScrollIndicator={false}>
+              <Text style={[styles.themeSectionLabel, { color: colors.textMuted }]}>FREE THEMES</Text>
+              <View style={styles.themeGrid}>
+                {[
+                  { id: 'light' as ThemeId, name: 'Light', colors: { bg: '#f5f9fc', card: '#ffffff', accent: '#4a90a4' } },
+                  { id: 'dark' as ThemeId, name: 'Dark', colors: { bg: '#0d1a24', card: '#162836', accent: '#6ab0c9' } },
+                  { id: 'system' as ThemeId, name: 'System', colors: { bg: isDark ? '#0d1a24' : '#f5f9fc', card: isDark ? '#162836' : '#ffffff', accent: isDark ? '#6ab0c9' : '#4a90a4' } },
+                ].map((theme) => {
+                  const isSelected = themeId === theme.id;
+                  return (
+                    <TouchableOpacity
+                      key={theme.id}
+                      style={[
+                        styles.themeCard,
+                        { borderColor: isSelected ? colors.accent : colors.border },
+                        isSelected && styles.themeCardSelected,
+                      ]}
+                      onPress={() => handleThemeSelect(theme.id)}
+                    >
+                      <View style={[styles.themePreview, { backgroundColor: theme.colors.bg }]}>
+                        <View style={[styles.themePreviewCard, { backgroundColor: theme.colors.card }]}>
+                          <View style={[styles.themePreviewLine, { backgroundColor: theme.colors.accent }]} />
+                          <View style={[styles.themePreviewLineShort, { backgroundColor: theme.colors.accent, opacity: 0.5 }]} />
+                        </View>
+                      </View>
+                      <View style={styles.themeInfo}>
+                        <Text style={[styles.themeName, { color: colors.primary }]}>{theme.name}</Text>
+                        {isSelected && <Check size={16} color={colors.accent} />}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.premiumThemesHeader}>
+                <Text style={[styles.themeSectionLabel, { color: colors.textMuted }]}>POEMCLOUD+ THEMES</Text>
+                {!isPremium && (
+                  <View style={[styles.premiumBadge, { backgroundColor: colors.accentLight }]}>
+                    <Crown size={12} color={colors.accent} />
+                    <Text style={[styles.premiumBadgeText, { color: colors.accent }]}>Premium</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.themeGrid}>
+                {premiumThemes.map((theme) => {
+                  const isSelected = themeId === theme.id;
+                  const previewColors = isDark ? theme.previewColors.dark : theme.previewColors.light;
+                  const isLocked = !isPremium;
+                  
+                  return (
+                    <TouchableOpacity
+                      key={theme.id}
+                      style={[
+                        styles.themeCard,
+                        { borderColor: isSelected ? colors.accent : colors.border },
+                        isSelected && styles.themeCardSelected,
+                      ]}
+                      onPress={() => handleThemeSelect(theme.id)}
+                    >
+                      <View style={[styles.themePreview, { backgroundColor: previewColors.bg }]}>
+                        <View style={[styles.themePreviewCard, { backgroundColor: previewColors.card }]}>
+                          <View style={[styles.themePreviewLine, { backgroundColor: previewColors.accent }]} />
+                          <View style={[styles.themePreviewLineShort, { backgroundColor: previewColors.accent, opacity: 0.5 }]} />
+                        </View>
+                        {isLocked && (
+                          <View style={styles.lockedOverlay}>
+                            <Crown size={18} color={colors.accent} />
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.themeInfo}>
+                        <Text style={[styles.themeName, { color: colors.primary }]}>{theme.name}</Text>
+                        {isSelected && <Check size={16} color={colors.accent} />}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </SafeAreaView>
+        </View>
+      </Modal>
+
+      <Modal
         visible={showMoodsModal}
         animationType="slide"
         presentationStyle="pageSheet"
@@ -451,7 +596,7 @@ export default function SettingsScreen() {
                       style={[
                         styles.moodChipText,
                         { color: colors.textMuted },
-                        isSelected && { color: '#ffffff', fontWeight: '600' },
+                        isSelected && { color: '#ffffff', fontWeight: '600' as const },
                       ]}
                     >
                       {mood.charAt(0).toUpperCase() + mood.slice(1)}
@@ -499,7 +644,7 @@ export default function SettingsScreen() {
                 <Text style={[
                   styles.countryName,
                   { color: colors.primary },
-                  selectedCountries.includes('ALL') && { fontWeight: '600' },
+                  selectedCountries.includes('ALL') && { fontWeight: '600' as const },
                 ]}>
                   All Countries
                 </Text>
@@ -524,7 +669,7 @@ export default function SettingsScreen() {
                     <Text style={[
                       styles.countryName,
                       { color: colors.primary },
-                      isSelected && { fontWeight: '600' },
+                      isSelected && { fontWeight: '600' as const },
                     ]}>
                       {country.name}
                     </Text>
@@ -594,30 +739,31 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  cardLabel: {
+  appearanceSection: {
+    padding: 16,
+    paddingTop: 8,
+  },
+  appearanceLabel: {
     fontSize: 15,
     fontWeight: '600',
-    padding: 16,
-    paddingBottom: 12,
+    marginBottom: 12,
   },
-  themeOptions: {
+  appearanceOptions: {
     flexDirection: 'row',
     gap: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
   },
-  themeOption: {
+  appearanceOption: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: 12,
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
     borderWidth: 1.5,
   },
-  themeOptionText: {
-    fontSize: 14,
+  appearanceOptionText: {
+    fontSize: 13,
   },
   settingRow: {
     flexDirection: 'row',
@@ -761,5 +907,95 @@ const styles = StyleSheet.create({
   countryName: {
     flex: 1,
     fontSize: 16,
+  },
+  themeScroll: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  themeSectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  premiumThemesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 24,
+    marginBottom: 4,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  premiumBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  themeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  themeCard: {
+    width: '47%',
+    borderRadius: 12,
+    borderWidth: 2,
+    overflow: 'hidden',
+  },
+  themeCardSelected: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  themePreview: {
+    height: 80,
+    padding: 12,
+    justifyContent: 'center',
+  },
+  themePreviewCard: {
+    borderRadius: 8,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  themePreviewLine: {
+    height: 6,
+    width: '70%',
+    borderRadius: 3,
+    marginBottom: 6,
+  },
+  themePreviewLineShort: {
+    height: 4,
+    width: '50%',
+    borderRadius: 2,
+  },
+  lockedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  themeName: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
