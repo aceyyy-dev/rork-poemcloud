@@ -4,6 +4,8 @@ import * as Speech from 'expo-speech';
 import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
 
+const COMPLETION_DISPLAY_DELAY = 1500;
+
 interface TTSState {
   currentPoemId: string | null;
   currentPoemTitle: string | null;
@@ -13,6 +15,7 @@ interface TTSState {
   duration: number;
   elapsed: number;
   isPlayerVisible: boolean;
+  isCompleted: boolean;
 }
 
 export const [TTSProvider, useTTS] = createContextHook(() => {
@@ -25,6 +28,7 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
     duration: 0,
     elapsed: 0,
     isPlayerVisible: false,
+    isCompleted: false,
   });
   const pausedAtRef = useRef<number>(0);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -32,6 +36,8 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
   const estimatedDurationRef = useRef<number>(0);
   const currentTextRef = useRef<string>('');
   const hasInitializedAudioRef = useRef(false);
+  const completionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const speechStartTimeRef = useRef<number>(0);
 
   useEffect(() => {
     const initializeAudio = async () => {
@@ -81,30 +87,65 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
     }, 100);
   }, [stopProgressTracking]);
 
+  const handleSpeechComplete = useCallback(() => {
+    console.log('[TTS] Speech completed - syncing progress to 100%');
+    stopProgressTracking();
+    
+    const actualDuration = (Date.now() - speechStartTimeRef.current) / 1000;
+    console.log('[TTS] Actual speech duration:', actualDuration, 'Estimated:', estimatedDurationRef.current);
+    
+    setState(prev => ({ 
+      ...prev, 
+      isSpeaking: false, 
+      isPaused: false,
+      progress: 1, 
+      elapsed: prev.duration,
+      isCompleted: true,
+      isPlayerVisible: true,
+    }));
+
+    if (completionTimeoutRef.current) {
+      clearTimeout(completionTimeoutRef.current);
+    }
+    completionTimeoutRef.current = setTimeout(() => {
+      setState(prev => {
+        if (prev.isCompleted) {
+          console.log('[TTS] Auto-dismissing after completion delay');
+          return {
+            ...prev,
+            currentPoemId: null,
+            currentPoemTitle: null,
+            isPlayerVisible: false,
+            isCompleted: false,
+            progress: 0,
+            elapsed: 0,
+            duration: 0,
+          };
+        }
+        return prev;
+      });
+    }, COMPLETION_DISPLAY_DELAY);
+  }, [stopProgressTracking]);
+
   useEffect(() => {
     const interval = setInterval(async () => {
-      if (state.currentPoemId && state.isSpeaking && !state.isPaused) {
+      if (state.currentPoemId && state.isSpeaking && !state.isPaused && !state.isCompleted) {
         const speaking = await Speech.isSpeakingAsync();
         if (!speaking) {
-          stopProgressTracking();
-          setState(prev => ({ 
-            ...prev, 
-            isSpeaking: false, 
-            isPaused: false,
-            progress: 1, 
-            elapsed: prev.duration,
-            isPlayerVisible: false,
-          }));
-          console.log('[TTS] Speech naturally completed');
+          handleSpeechComplete();
         }
       }
-    }, 500);
+    }, 300);
 
     return () => clearInterval(interval);
-  }, [state.currentPoemId, state.isSpeaking, state.isPaused, stopProgressTracking]);
+  }, [state.currentPoemId, state.isSpeaking, state.isPaused, state.isCompleted, handleSpeechComplete]);
 
   const dismissPlayer = useCallback(() => {
     stopProgressTracking();
+    if (completionTimeoutRef.current) {
+      clearTimeout(completionTimeoutRef.current);
+      completionTimeoutRef.current = null;
+    }
     Speech.stop();
     pausedAtRef.current = 0;
     currentTextRef.current = '';
@@ -117,6 +158,7 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
       duration: 0,
       elapsed: 0,
       isPlayerVisible: false,
+      isCompleted: false,
     });
     console.log('[TTS] Player dismissed');
   }, [stopProgressTracking]);
@@ -124,6 +166,10 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
   const stopSpeaking = useCallback(async () => {
     try {
       stopProgressTracking();
+      if (completionTimeoutRef.current) {
+        clearTimeout(completionTimeoutRef.current);
+        completionTimeoutRef.current = null;
+      }
       await Speech.stop();
       pausedAtRef.current = 0;
       currentTextRef.current = '';
@@ -136,6 +182,7 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
         duration: 0,
         elapsed: 0,
         isPlayerVisible: false,
+        isCompleted: false,
       });
       console.log('[TTS] Stopped speaking');
     } catch (error) {
@@ -146,6 +193,10 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
   const pauseSpeaking = useCallback(async () => {
     try {
       stopProgressTracking();
+      if (completionTimeoutRef.current) {
+        clearTimeout(completionTimeoutRef.current);
+        completionTimeoutRef.current = null;
+      }
       await Speech.stop();
       pausedAtRef.current = state.elapsed;
       setState(prev => ({ 
@@ -153,6 +204,7 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
         isSpeaking: false, 
         isPaused: true,
         isPlayerVisible: true,
+        isCompleted: false,
       }));
       console.log('[TTS] Paused at:', state.elapsed);
     } catch (error) {
@@ -176,8 +228,17 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
       currentTextRef.current = cleanText;
 
       const wordCount = cleanText.split(/\s+/).length;
-      const wordsPerSecond = Platform.OS === 'ios' ? 2.2 : 2.0;
-      const estimatedDuration = Math.max(wordCount / wordsPerSecond, 5);
+      const charCount = cleanText.length;
+      const wordsPerSecond = Platform.OS === 'ios' ? 2.4 : 2.2;
+      const charsPerSecond = Platform.OS === 'ios' ? 14 : 12;
+      const wordBasedDuration = wordCount / wordsPerSecond;
+      const charBasedDuration = charCount / charsPerSecond;
+      const estimatedDuration = Math.max((wordBasedDuration + charBasedDuration) / 2, 3);
+
+      if (completionTimeoutRef.current) {
+        clearTimeout(completionTimeoutRef.current);
+        completionTimeoutRef.current = null;
+      }
 
       setState({
         currentPoemId: poemId,
@@ -188,26 +249,20 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
         duration: estimatedDuration,
         elapsed: 0,
         isPlayerVisible: true,
+        isCompleted: false,
       });
       pausedAtRef.current = 0;
+      speechStartTimeRef.current = Date.now();
       startProgressTracking(estimatedDuration);
-      console.log('[TTS] Starting speech for poem:', poemId, 'estimated duration:', estimatedDuration);
+      console.log('[TTS] Starting speech for poem:', poemId, 'estimated duration:', estimatedDuration, 'words:', wordCount, 'chars:', charCount);
 
       Speech.speak(cleanText, {
         language: 'en-US',
         pitch: 1.0,
         rate: Platform.OS === 'ios' ? 0.92 : 0.88,
         onDone: () => {
-          console.log('[TTS] Speech completed');
-          stopProgressTracking();
-          setState(prev => ({ 
-            ...prev, 
-            isSpeaking: false, 
-            isPaused: false,
-            progress: 1, 
-            elapsed: prev.duration,
-            isPlayerVisible: false,
-          }));
+          console.log('[TTS] Speech onDone callback');
+          handleSpeechComplete();
         },
         onStopped: () => {
           console.log('[TTS] Speech stopped by user');
@@ -215,6 +270,10 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
         onError: (error) => {
           console.log('[TTS] Speech error:', error);
           stopProgressTracking();
+          if (completionTimeoutRef.current) {
+            clearTimeout(completionTimeoutRef.current);
+            completionTimeoutRef.current = null;
+          }
           setState({
             currentPoemId: null,
             currentPoemTitle: null,
@@ -224,12 +283,17 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
             duration: 0,
             elapsed: 0,
             isPlayerVisible: false,
+            isCompleted: false,
           });
         },
       });
     } catch (error) {
       console.log('[TTS] Error starting speech:', error);
       stopProgressTracking();
+      if (completionTimeoutRef.current) {
+        clearTimeout(completionTimeoutRef.current);
+        completionTimeoutRef.current = null;
+      }
       setState({
         currentPoemId: null,
         currentPoemTitle: null,
@@ -239,9 +303,10 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
         duration: 0,
         elapsed: 0,
         isPlayerVisible: false,
+        isCompleted: false,
       });
     }
-  }, [startProgressTracking, stopProgressTracking]);
+  }, [startProgressTracking, stopProgressTracking, handleSpeechComplete]);
 
   const resumeSpeaking = useCallback(async (poemId: string, text: string) => {
     try {
@@ -254,7 +319,8 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
       const skipWords = Math.floor((pausedAtRef.current / state.duration) * wordsArray.length);
       const remainingText = wordsArray.slice(skipWords).join(' ');
 
-      setState(prev => ({ ...prev, isSpeaking: true, isPaused: false, isPlayerVisible: true }));
+      setState(prev => ({ ...prev, isSpeaking: true, isPaused: false, isPlayerVisible: true, isCompleted: false }));
+      speechStartTimeRef.current = Date.now() - (pausedAtRef.current * 1000);
       startTimeRef.current = Date.now() - (pausedAtRef.current * 1000);
       
       progressIntervalRef.current = setInterval(() => {
@@ -279,15 +345,7 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
         rate: Platform.OS === 'ios' ? 0.92 : 0.88,
         onDone: () => {
           console.log('[TTS] Speech completed after resume');
-          stopProgressTracking();
-          setState(prev => ({ 
-            ...prev, 
-            isSpeaking: false, 
-            isPaused: false,
-            progress: 1, 
-            elapsed: prev.duration,
-            isPlayerVisible: false,
-          }));
+          handleSpeechComplete();
         },
         onStopped: () => {
           console.log('[TTS] Speech stopped after resume');
@@ -295,6 +353,10 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
         onError: (error) => {
           console.log('[TTS] Speech error after resume:', error);
           stopProgressTracking();
+          if (completionTimeoutRef.current) {
+            clearTimeout(completionTimeoutRef.current);
+            completionTimeoutRef.current = null;
+          }
           setState({
             currentPoemId: null,
             currentPoemTitle: null,
@@ -304,13 +366,14 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
             duration: 0,
             elapsed: 0,
             isPlayerVisible: false,
+            isCompleted: false,
           });
         },
       });
     } catch (error) {
       console.log('[TTS] Error resuming speech:', error);
     }
-  }, [state.duration, stopProgressTracking]);
+  }, [state.duration, stopProgressTracking, handleSpeechComplete]);
 
   const toggleSpeech = useCallback(async (poemId: string, text: string, poemTitle?: string) => {
     if (state.currentPoemId === poemId) {
@@ -370,6 +433,7 @@ export const [TTSProvider, useTTS] = createContextHook(() => {
     duration: state.duration,
     elapsed: state.elapsed,
     isPlayerVisible: state.isPlayerVisible,
+    isCompleted: state.isCompleted,
     speak,
     stopSpeaking,
     pauseSpeaking,

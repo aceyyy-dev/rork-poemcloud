@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Heart, Bookmark, Share2, Headphones, Languages, Crown, Search, X, Check, Play, Pause, ListPlus, XCircle } from 'lucide-react-native';
+import { Heart, Bookmark, Share2, Headphones, Languages, Crown, Search, X, Check, Play, Pause, ListPlus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
@@ -67,7 +67,7 @@ export default function FeedScreen() {
   const [showTranslation, setShowTranslation] = useState<Record<string, boolean>>({});
   const [languageSearch, setLanguageSearch] = useState('');
   const [showListenModal, setShowListenModal] = useState(false);
-  const { stopSpeaking, toggleSpeech, isSpeakingPoem, hasActiveAudio, isPaused, progress, getRemainingTime, seekTo, duration, dismissPlayer } = useTTS();
+  const { stopSpeaking, toggleSpeech, isSpeakingPoem, hasActiveAudio, isPaused, progress, getRemainingTime, getElapsedTime, seekTo, duration, dismissPlayer, isCompleted } = useTTS();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePoem, setSharePoem] = useState<Poem | null>(null);
   const translationCacheRef = useRef<Record<string, string>>({});
@@ -226,7 +226,9 @@ export default function FeedScreen() {
       isAudioPaused={isPaused}
       progress={progress}
       remainingTime={getRemainingTime()}
+      elapsedTime={getElapsedTime()}
       duration={duration}
+      isCompleted={isCompleted}
       onSeek={seekTo}
       onDismissPlayer={dismissPlayer}
       onLike={() => {
@@ -255,7 +257,7 @@ export default function FeedScreen() {
       onPoetPress={() => router.push(`/poet/${poem.poetId}`)}
       colors={colors}
     />
-  ), [isLiked, isBookmarked, preferences.isPremium, toggleLike, toggleBookmark, router, colors, translatedPoems, showTranslation, isSpeakingPoem, hasActiveAudio, isPaused, ITEM_HEIGHT, handleListen, progress, getRemainingTime, handleAddToPlaylist, handleShare, duration, seekTo, handleTranslate, dismissPlayer]);
+  ), [isLiked, isBookmarked, preferences.isPremium, toggleLike, toggleBookmark, router, colors, translatedPoems, showTranslation, isSpeakingPoem, hasActiveAudio, isPaused, ITEM_HEIGHT, handleListen, progress, getRemainingTime, getElapsedTime, handleAddToPlaylist, handleShare, duration, seekTo, handleTranslate, dismissPlayer, isCompleted]);
 
   const getItemLayout = useCallback((_: any, index: number) => ({
     length: ITEM_HEIGHT,
@@ -427,7 +429,9 @@ interface FeedItemProps {
   isAudioPaused: boolean;
   progress: number;
   remainingTime: string;
+  elapsedTime: string;
   duration: number;
+  isCompleted: boolean;
   onSeek: (position: number) => void;
   onDismissPlayer: () => void;
   onLike: () => void;
@@ -455,7 +459,9 @@ const FeedItem = React.memo(function FeedItem({
   isAudioPaused,
   progress,
   remainingTime,
+  elapsedTime,
   duration,
+  isCompleted,
   onSeek,
   onDismissPlayer,
   onLike,
@@ -670,32 +676,44 @@ const FeedItem = React.memo(function FeedItem({
           </TouchableOpacity>
         </View>
 
-        {showAudioUI && (
-          <View style={[styles.floatingAudioPlayer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <TouchableOpacity onPress={onListen} style={styles.audioPlayPause}>
-              {isPlaying ? (
-                <Pause size={18} color={colors.accent} />
-              ) : (
-                <Play size={18} color={colors.accent} />
-              )}
-            </TouchableOpacity>
+        </View>
+
+      {showAudioUI && (
+        <View style={[styles.bottomAudioPlayer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <TouchableOpacity onPress={onListen} style={[styles.audioPlayBtn, { backgroundColor: `${colors.accent}15` }]}>
+            {isPlaying ? (
+              <Pause size={22} color={colors.accent} />
+            ) : (
+              <Play size={22} color={colors.accent} />
+            )}
+          </TouchableOpacity>
+          
+          <View style={styles.audioMiddleSection}>
+            <View style={styles.audioTitleRow}>
+              <Text style={[styles.audioNowPlaying, { color: colors.textMuted }]} numberOfLines={1}>
+                {isCompleted ? 'Finished' : isPlaying ? 'Now playing' : 'Paused'}
+              </Text>
+              <Text style={[styles.audioTimestamp, { color: colors.textMuted }]}>
+                {elapsedTime} / {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}
+              </Text>
+            </View>
             <View 
-              style={styles.audioProgressContainer}
+              style={styles.audioProgressArea}
               onLayout={handleProgressBarLayout}
               {...panResponder.panHandlers}
             >
-              <View style={[styles.audioProgressTrack, { backgroundColor: colors.border }]}>
-                <View style={[styles.audioProgressFill, { backgroundColor: colors.accent, width: progressPercent }]} />
-                <View style={[styles.audioProgressThumb, { backgroundColor: colors.accent, left: progressPercent }]} />
+              <View style={[styles.audioTrack, { backgroundColor: colors.border }]}>
+                <View style={[styles.audioFill, { backgroundColor: colors.accent, width: progressPercent }]} />
+                <View style={[styles.audioKnob, { backgroundColor: colors.accent, left: progressPercent }]} />
               </View>
             </View>
-            <Text style={[styles.audioTimeSmall, { color: colors.textMuted }]}>{localProgress >= 1 ? '0:00' : remainingTime}</Text>
-            <TouchableOpacity onPress={onDismissPlayer} style={styles.audioDismiss}>
-              <XCircle size={16} color={colors.textMuted} />
-            </TouchableOpacity>
           </View>
-        )}
-      </View>
+          
+          <TouchableOpacity onPress={onDismissPlayer} style={styles.audioCloseBtn}>
+            <X size={20} color={colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 });
@@ -838,64 +856,79 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     width: ACTION_RAIL_WIDTH,
   },
-  floatingAudioPlayer: {
+  bottomAudioPlayer: {
+    position: 'absolute' as const,
+    bottom: 8,
+    left: 16,
+    right: 16 + ACTION_RAIL_WIDTH + 4,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginTop: 8,
-    width: 160,
-    marginLeft: -108,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
     borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-    gap: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+    gap: 12,
   },
-  audioPlayPause: {
-    width: 28,
-    height: 28,
+  audioPlayBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  audioTimeSmall: {
+  audioMiddleSection: {
+    flex: 1,
+    gap: 8,
+  },
+  audioTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  audioNowPlaying: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+  },
+  audioTimestamp: {
     fontSize: 11,
     fontWeight: '600' as const,
-    minWidth: 32,
-    textAlign: 'right' as const,
   },
-  audioProgressContainer: {
-    flex: 1,
-    height: 24,
+  audioProgressArea: {
+    height: 20,
     justifyContent: 'center',
   },
-  audioProgressTrack: {
+  audioTrack: {
     height: 4,
     borderRadius: 2,
     width: '100%',
     position: 'relative' as const,
   },
-  audioProgressFill: {
+  audioFill: {
     height: '100%',
     borderRadius: 2,
     position: 'absolute' as const,
     left: 0,
     top: 0,
   },
-  audioProgressThumb: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  audioKnob: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     position: 'absolute' as const,
-    top: -3,
-    marginLeft: -5,
+    top: -4,
+    marginLeft: -6,
   },
-  audioDismiss: {
-    padding: 4,
-    marginLeft: 4,
+  audioCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionsRail: {
     justifyContent: 'flex-end',
