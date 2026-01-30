@@ -30,6 +30,8 @@ import { useTTS } from '@/contexts/TTSContext';
 import PoemShareCard from '@/components/PoemShareCard';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import AddToPlaylistModal from '@/components/AddToPlaylistModal';
+import { useScreenCapture } from '@/contexts/ScreenCaptureContext';
+import ScreenCaptureOverlay from '@/components/ScreenCaptureOverlay';
 
 
 const { width, height } = Dimensions.get('window');
@@ -62,6 +64,7 @@ export default function FeedScreen() {
       deactivateKeepAwake();
     };
   }, []);
+
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
@@ -82,6 +85,14 @@ export default function FeedScreen() {
   const [translationError, setTranslationError] = useState<string | null>(null);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [playlistPoem, setPlaylistPoem] = useState<Poem | null>(null);
+  const { enterProtectedScreen, exitProtectedScreen } = useScreenCapture();
+
+  React.useEffect(() => {
+    enterProtectedScreen();
+    return () => {
+      exitProtectedScreen();
+    };
+  }, [enterProtectedScreen, exitProtectedScreen]);
 
   const ITEM_HEIGHT = height - insets.top - insets.bottom - 120;
 
@@ -368,6 +379,8 @@ export default function FeedScreen() {
           }}
         />
       )}
+
+      <ScreenCaptureOverlay onUpgrade={() => setShowPremiumModal(true)} />
     </View>
   );
 }

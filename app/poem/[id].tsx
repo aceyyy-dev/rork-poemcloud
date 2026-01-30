@@ -36,6 +36,8 @@ import ListenPremiumModal from '@/components/ListenPremiumModal';
 import * as Haptics from 'expo-haptics';
 import { useTTS } from '@/contexts/TTSContext';
 import PoemShareCard from '@/components/PoemShareCard';
+import { useScreenCapture } from '@/contexts/ScreenCaptureContext';
+import ScreenCaptureOverlay from '@/components/ScreenCaptureOverlay';
 
 const SUPPORTED_LANGUAGES = [
   { name: 'French', code: 'fr' },
@@ -65,6 +67,7 @@ export default function PoemDetailScreen() {
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [showListenModal, setShowListenModal] = useState(false);
   const { toggleSpeech, isSpeakingPoem, stopSpeaking, progress, getRemainingTime, seekTo, duration } = useTTS();
+  const { enterProtectedScreen, exitProtectedScreen } = useScreenCapture();
   const [languageSearch, setLanguageSearch] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [isAIGenerated, setIsAIGenerated] = useState(true);
@@ -81,6 +84,13 @@ export default function PoemDetailScreen() {
       markAsRead(poem.id);
     }
   }, [poem?.id, markAsRead]);
+
+  React.useEffect(() => {
+    enterProtectedScreen();
+    return () => {
+      exitProtectedScreen();
+    };
+  }, [enterProtectedScreen, exitProtectedScreen]);
 
   React.useEffect(() => {
     return () => {
@@ -436,6 +446,8 @@ export default function PoemDetailScreen() {
           onClose={() => setShowShareModal(false)}
         />
       )}
+
+      <ScreenCaptureOverlay onUpgrade={() => setShowPremiumModal(true)} />
     </View>
   );
 }

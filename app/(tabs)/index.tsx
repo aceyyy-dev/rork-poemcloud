@@ -24,6 +24,8 @@ import PoemShareCard from '@/components/PoemShareCard';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { useTTS } from '@/contexts/TTSContext';
+import { useScreenCapture } from '@/contexts/ScreenCaptureContext';
+import ScreenCaptureOverlay from '@/components/ScreenCaptureOverlay';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -31,6 +33,7 @@ export default function HomeScreen() {
   const { preferences, completeOnboarding, isLiked, isBookmarked, toggleLike, toggleBookmark } = useUser();
   const { isPremium } = usePurchases();
   const { toggleSpeech, isSpeakingPoem, progress, getRemainingTime } = useTTS();
+  const { enterProtectedScreen, exitProtectedScreen } = useScreenCapture();
   const [refreshing, setRefreshing] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showListenModal, setShowListenModal] = useState(false);
@@ -48,6 +51,15 @@ export default function HomeScreen() {
       }).start();
     }
   }, [preferences.hasCompletedOnboarding]);
+
+  useEffect(() => {
+    if (preferences.hasCompletedOnboarding) {
+      enterProtectedScreen();
+      return () => {
+        exitProtectedScreen();
+      };
+    }
+  }, [preferences.hasCompletedOnboarding, enterProtectedScreen, exitProtectedScreen]);
 
   const handleOnboardingComplete = (prefs: {
     moods: Mood[];
@@ -305,6 +317,8 @@ export default function HomeScreen() {
         visible={showShareModal}
         onClose={() => setShowShareModal(false)}
       />
+
+      <ScreenCaptureOverlay onUpgrade={() => setShowPremiumModal(true)} />
     </View>
   );
 }
