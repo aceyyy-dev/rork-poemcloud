@@ -32,25 +32,14 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import AddToPlaylistModal from '@/components/AddToPlaylistModal';
 import { useScreenCapture } from '@/contexts/ScreenCaptureContext';
 import ScreenCaptureOverlay from '@/components/ScreenCaptureOverlay';
+import { translateWithAI, SUPPORTED_LANGUAGES } from '@/utils/translation';
 
 
 const { height } = Dimensions.get('window');
 const CARD_PADDING = 20;
 const ACTION_RAIL_WIDTH = 52;
 
-const SUPPORTED_LANGUAGES = [
-  { name: 'French', code: 'fr' },
-  { name: 'Spanish', code: 'es' },
-  { name: 'German', code: 'de' },
-  { name: 'Italian', code: 'it' },
-  { name: 'Portuguese', code: 'pt' },
-  { name: 'Russian', code: 'ru' },
-  { name: 'Dutch', code: 'nl' },
-  { name: 'Polish', code: 'pl' },
-  { name: 'Arabic', code: 'ar' },
-  { name: 'Japanese', code: 'ja' },
-  { name: 'Chinese', code: 'zh' },
-];
+
 
 export default function FeedScreen() {
   React.useEffect(() => {
@@ -81,8 +70,9 @@ export default function FeedScreen() {
   const { stopSpeaking, toggleSpeech, isSpeakingPoem, hasActiveAudio, isPaused, progress, getRemainingTime, seekTo, duration } = useTTS();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePoem, setSharePoem] = useState<Poem | null>(null);
-  const [translationCache] = useState<Record<string, string>>({});
-  const [, setTranslationError] = useState<string | null>(null);
+  const translationCacheRef = useRef<Record<string, string>>({});
+  const [translationError, setTranslationError] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [playlistPoem, setPlaylistPoem] = useState<Poem | null>(null);
   const { enterProtectedScreen, exitProtectedScreen } = useScreenCapture();
@@ -137,36 +127,57 @@ export default function FeedScreen() {
     setShowLanguagePicker(true);
   }, [preferences.isPremium, handlePremiumAction]);
 
-  const [isTranslating] = useState(false);
-
-  const handleSelectLanguage = (languageName: string, languageCode: string) => {
+  const handleSelectLanguage = async (languageLabel: string, languageCode: string) => {
     if (!selectedPoemForTranslate) return;
 
     const poem = sortedPoems.find(p => p.id === selectedPoemForTranslate);
     if (!poem) return;
 
+    const poemId = selectedPoemForTranslate;
     setTranslationError(null);
     setShowLanguagePicker(false);
     setLanguageSearch('');
 
-    const cacheKey = `${selectedPoemForTranslate}-${languageCode}`;
-    if (translationCache[cacheKey]) {
-      console.log('[Translation] Using cached translation:', languageName);
+    const cacheKey = `${poemId}:${languageCode}`;
+    if (translationCacheRef.current[cacheKey]) {
+      console.log('[Translation] Cache hit:', languageLabel);
       setTranslatedPoems(prev => ({
         ...prev,
-        [selectedPoemForTranslate]: {
-          language: languageName,
-          text: translationCache[cacheKey],
+        [poemId]: {
+          language: languageLabel,
+          text: translationCacheRef.current[cacheKey],
+          isAIGenerated: true,
         },
       }));
-      setShowTranslation(prev => ({ ...prev, [selectedPoemForTranslate]: true }));
+      setShowTranslation(prev => ({ ...prev, [poemId]: true }));
       setSelectedPoemForTranslate(null);
       return;
     }
 
-    console.log('[Translation] Translation feature not available');
-    setTranslationError('Translation feature is currently unavailable.');
-    setSelectedPoemForTranslate(null);
+    console.log('[Translation] Cache miss, calling AI for:', languageLabel);
+    setIsTranslating(true);
+
+    try {
+      const translatedText = await translateWithAI(poem.text, languageLabel);
+      translationCacheRef.current[cacheKey] = translatedText;
+      
+      setTranslatedPoems(prev => ({
+        ...prev,
+        [poemId]: {
+          language: languageLabel,
+          text: translatedText,
+          isAIGenerated: true,
+        },
+      }));
+      setShowTranslation(prev => ({ ...prev, [poemId]: true }));
+      console.log('[Translation] Success for poem:', poemId);
+    } catch (error) {
+      console.error('[Translation] Failed:', error);
+      setTranslationError('Translation unavailable right now. Try again.');
+    } finally {
+      setIsTranslating(false);
+      setSelectedPoemForTranslate(null);
+    }
   };
 
   const handleShare = useCallback((poem: Poem) => {
@@ -194,7 +205,7 @@ export default function FeedScreen() {
   }, [preferences.isPremium, toggleSpeech]);
 
   const filteredLanguages = SUPPORTED_LANGUAGES.filter(lang =>
-    lang.name.toLowerCase().includes(languageSearch.toLowerCase())
+    lang.label.toLowerCase().includes(languageSearch.toLowerCase())
   );
 
   const handleSearchPress = () => {
@@ -286,6 +297,21 @@ export default function FeedScreen() {
         />
       </SafeAreaView>
 
+      {translationError && (
+        <View style={[styles.errorToast, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.errorToastText, { color: colors.textMuted }]}>{translationError}</Text>
+          <TouchableOpacity onPress={() => setTranslationError(null)}>
+            <X size={16} color={colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {isTranslating && (
+        <View style={[styles.translatingToast, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.translatingToastText, { color: colors.accent }]}>Translating...</Text>
+        </View>
+      )}
+
       <PremiumModal
         visible={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
@@ -343,10 +369,10 @@ export default function FeedScreen() {
                 <TouchableOpacity
                   key={language.code}
                   style={[styles.languageItem, { borderBottomColor: colors.borderLight }]}
-                  onPress={() => handleSelectLanguage(language.name, language.code)}
+                  onPress={() => handleSelectLanguage(language.label, language.code)}
                   disabled={isTranslating}
                 >
-                  <Text style={[styles.languageText, { color: colors.text, opacity: isTranslating ? 0.5 : 1 }]}>{language.name}</Text>
+                  <Text style={[styles.languageText, { color: colors.text, opacity: isTranslating ? 0.5 : 1 }]}>{language.label}</Text>
                   <Check size={20} color={colors.accent} style={{ opacity: 0 }} />
                 </TouchableOpacity>
               ))}
@@ -545,9 +571,7 @@ const FeedItem = React.memo(function FeedItem({
               onPress={onToggleTranslation}
             >
               <Text style={[styles.translationBadgeText, { color: colors.accent }]}>
-                {translatedText.isAIGenerated 
-                  ? `${translatedText.language} (AI generated) • Tap for English`
-                  : `${translatedText.language} • Tap for English`}
+                {`${translatedText.language} (AI generated) · Tap for English`}
               </Text>
             </TouchableOpacity>
           )}
@@ -940,5 +964,44 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     fontStyle: 'italic' as const,
+  },
+  errorToast: {
+    position: 'absolute' as const,
+    bottom: 100,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  errorToastText: {
+    fontSize: 14,
+    flex: 1,
+    marginRight: 12,
+  },
+  translatingToast: {
+    position: 'absolute' as const,
+    bottom: 100,
+    alignSelf: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  translatingToastText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
   },
 });

@@ -37,20 +37,9 @@ import { useTTS } from '@/contexts/TTSContext';
 import PoemShareCard from '@/components/PoemShareCard';
 import { useScreenCapture } from '@/contexts/ScreenCaptureContext';
 import ScreenCaptureOverlay from '@/components/ScreenCaptureOverlay';
+import { translateWithAI, SUPPORTED_LANGUAGES } from '@/utils/translation';
 
-const SUPPORTED_LANGUAGES = [
-  { name: 'French', code: 'fr' },
-  { name: 'Spanish', code: 'es' },
-  { name: 'German', code: 'de' },
-  { name: 'Italian', code: 'it' },
-  { name: 'Portuguese', code: 'pt' },
-  { name: 'Russian', code: 'ru' },
-  { name: 'Dutch', code: 'nl' },
-  { name: 'Polish', code: 'pl' },
-  { name: 'Arabic', code: 'ar' },
-  { name: 'Japanese', code: 'ja' },
-  { name: 'Chinese', code: 'zh' },
-];
+
 
 export default function PoemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -70,9 +59,9 @@ export default function PoemDetailScreen() {
   const [languageSearch, setLanguageSearch] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [isAIGenerated, setIsAIGenerated] = useState(true);
-  const [translationCache] = useState<Record<string, string>>({});
+  const translationCacheRef = useRef<Record<string, string>>({});
   const [translationError, setTranslationError] = useState<string | null>(null);
-  const [isTranslating] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   
   const likeScale = useRef(new Animated.Value(1)).current;
   const bookmarkScale = useRef(new Animated.Value(1)).current;
@@ -157,33 +146,48 @@ export default function PoemDetailScreen() {
 
 
 
-  const handleSelectLanguage = (languageName: string, languageCode: string) => {
+  const handleSelectLanguage = async (languageLabel: string, languageCode: string) => {
     if (!poem) return;
 
-    setTranslationLanguage(languageName);
     setTranslationError(null);
     setShowLanguagePicker(false);
     setLanguageSearch('');
 
-    const isOriginal = languageName === poem.originalLanguage && poem.translatedText;
+    const isOriginal = languageLabel === poem.originalLanguage && poem.translatedText;
     setIsAIGenerated(!isOriginal);
 
     if (isOriginal && poem.translatedText) {
+      setTranslationLanguage(languageLabel);
       setTranslatedText(poem.translatedText);
       setShowTranslation(true);
       return;
     }
 
-    const cacheKey = `${poem.id}-${languageCode}`;
-    if (translationCache[cacheKey]) {
-      console.log('[Translation] Using cached translation:', languageName);
-      setTranslatedText(translationCache[cacheKey]);
+    const cacheKey = `${poem.id}:${languageCode}`;
+    if (translationCacheRef.current[cacheKey]) {
+      console.log('[Translation] Cache hit:', languageLabel);
+      setTranslationLanguage(languageLabel);
+      setTranslatedText(translationCacheRef.current[cacheKey]);
       setShowTranslation(true);
       return;
     }
 
-    console.log('[Translation] Translation feature not available');
-    setTranslationError('Translation feature is currently unavailable.');
+    console.log('[Translation] Cache miss, calling AI for:', languageLabel);
+    setIsTranslating(true);
+
+    try {
+      const result = await translateWithAI(poem.text, languageLabel);
+      translationCacheRef.current[cacheKey] = result;
+      setTranslationLanguage(languageLabel);
+      setTranslatedText(result);
+      setShowTranslation(true);
+      console.log('[Translation] Success');
+    } catch (error) {
+      console.error('[Translation] Failed:', error);
+      setTranslationError('Translation unavailable right now. Try again.');
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const handleListen = () => {
@@ -199,7 +203,7 @@ export default function PoemDetailScreen() {
   const isPlaying = poem ? isSpeakingPoem(poem.id) : false;
 
   const filteredLanguages = SUPPORTED_LANGUAGES.filter(lang =>
-    lang.name.toLowerCase().includes(languageSearch.toLowerCase())
+    lang.label.toLowerCase().includes(languageSearch.toLowerCase())
   );
 
   return (
@@ -428,10 +432,10 @@ export default function PoemDetailScreen() {
                 <TouchableOpacity
                   key={language.code}
                   style={[styles.languageItem, { borderBottomColor: colors.borderLight }]}
-                  onPress={() => handleSelectLanguage(language.name, language.code)}
+                  onPress={() => handleSelectLanguage(language.label, language.code)}
                   disabled={isTranslating}
                 >
-                  <Text style={[styles.languageText, { color: colors.text, opacity: isTranslating ? 0.5 : 1 }]}>{language.name}</Text>
+                  <Text style={[styles.languageText, { color: colors.text, opacity: isTranslating ? 0.5 : 1 }]}>{language.label}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
