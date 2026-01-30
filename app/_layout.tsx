@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { Animated, StyleSheet } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UserProvider } from "@/contexts/UserContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
@@ -20,17 +20,42 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 
 const queryClient = new QueryClient();
 
+function IllustratedBackground({ gradient, overlay }: { gradient: string[]; overlay: string }) {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <View style={[styles.gradientBase, { backgroundColor: gradient[0] }]} />
+      <View style={[styles.gradientLayer, { backgroundColor: gradient[1], top: '15%' }]} />
+      <View style={[styles.gradientLayer, { backgroundColor: gradient[2], top: '35%' }]} />
+      <View style={[styles.gradientLayer, { backgroundColor: gradient[3], top: '55%' }]} />
+      <View style={[styles.gradientLayer, { backgroundColor: gradient[4], top: '75%' }]} />
+      <View style={[styles.overlayLayer, { backgroundColor: overlay }]} />
+    </View>
+  );
+}
+
 function RootLayoutNav() {
-  const { colors, transitionOpacity } = useTheme();
+  const { colors, transitionOpacity, isIllustratedTheme, illustratedThemeData } = useTheme();
+  
+  const backgroundColor = isIllustratedTheme ? 'transparent' : colors.background;
+  const headerBgColor = isIllustratedTheme ? 'transparent' : colors.background;
   
   return (
     <Animated.View style={[styles.container, { opacity: transitionOpacity }]}>
+      {isIllustratedTheme && illustratedThemeData && (
+        <IllustratedBackground 
+          gradient={illustratedThemeData.backgroundGradient} 
+          overlay={illustratedThemeData.overlayColor} 
+        />
+      )}
+      {!isIllustratedTheme && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
+      )}
     <Stack
       screenOptions={{
         headerBackTitle: "Back",
-        headerStyle: { backgroundColor: colors.background },
+        headerStyle: { backgroundColor: headerBgColor },
         headerTintColor: colors.primary,
-        contentStyle: { backgroundColor: colors.background },
+        contentStyle: { backgroundColor },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -109,6 +134,18 @@ function RootLayoutNav() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  gradientBase: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  gradientLayer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  overlayLayer: {
+    ...StyleSheet.absoluteFillObject,
   },
 });
 

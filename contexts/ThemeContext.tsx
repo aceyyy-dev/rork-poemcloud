@@ -7,8 +7,11 @@ import {
   ThemeColors, 
   ThemeId, 
   getThemeColors,
+  getIllustratedTheme,
   premiumThemes,
   freeThemes,
+  illustratedThemes,
+  IllustratedThemeDefinition,
 } from '@/constants/colors';
 
 const THEME_STORAGE_KEY = 'poemcloud_theme';
@@ -73,18 +76,36 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
   }, [saveTheme, animateTransition]);
 
   const isPremiumTheme = useMemo(() => {
-    return premiumThemes.some(t => t.id === themeId);
+    return premiumThemes.some(t => t.id === themeId) || illustratedThemes.some(t => t.id === themeId);
+  }, [themeId]);
+
+  const isIllustratedTheme = useMemo(() => {
+    return illustratedThemes.some(t => t.id === themeId);
+  }, [themeId]);
+
+  const illustratedThemeData: IllustratedThemeDefinition | null = useMemo(() => {
+    return getIllustratedTheme(themeId);
   }, [themeId]);
 
   const isDark = useMemo(() => {
-    if (isPremiumTheme) {
-      return true;
+    if (isIllustratedTheme) {
+      const illustrated = getIllustratedTheme(themeId);
+      if (illustrated) {
+        return illustrated.id === 'golden-dusk' || illustrated.id === 'blue-hour';
+      }
+    }
+    
+    if (premiumThemes.some(t => t.id === themeId)) {
+      const theme = premiumThemes.find(t => t.id === themeId);
+      if (theme) {
+        return theme.id !== 'dawn-pages';
+      }
     }
     
     if (themeId === 'light') return false;
     if (themeId === 'dark') return true;
     return systemColorScheme === 'dark';
-  }, [themeId, isPremiumTheme, systemColorScheme]);
+  }, [themeId, isIllustratedTheme, systemColorScheme]);
 
   const colors: ThemeColors = useMemo(() => {
     return getThemeColors(themeId, isDark);
@@ -95,7 +116,9 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     if (themeId === 'dark') return 'Dark';
     if (themeId === 'system') return 'System';
     const premium = premiumThemes.find(t => t.id === themeId);
-    return premium?.name || 'System';
+    if (premium) return premium.name;
+    const illustrated = illustratedThemes.find(t => t.id === themeId);
+    return illustrated?.name || 'System';
   }, [themeId]);
 
   const resetToFreeTheme = useCallback(() => {
@@ -110,10 +133,13 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     colors,
     isLoading: themeQuery.isLoading,
     isPremiumTheme,
+    isIllustratedTheme,
+    illustratedThemeData,
     currentThemeName,
     resetToFreeTheme,
     premiumThemes,
     freeThemes,
+    illustratedThemes,
     transitionOpacity,
   };
 });
