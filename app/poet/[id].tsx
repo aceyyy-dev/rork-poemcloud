@@ -17,7 +17,7 @@ import { getPoemsByPoet } from '@/mocks/poems';
 export default function PoetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isIllustrated } = useTheme();
 
   const poet = getPoetById(id);
   const poems = poet ? getPoemsByPoet(id) : [];
@@ -33,12 +33,14 @@ export default function PoetDetailScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.gradientStart, colors.gradientMid, colors.background]}
-        locations={[0, 0.3, 1]}
-        style={styles.gradient}
-      />
+    <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
+      {!isIllustrated && (
+        <LinearGradient
+          colors={[colors.gradientStart, colors.gradientMid, colors.background]}
+          locations={[0, 0.3, 1]}
+          style={styles.gradient}
+        />
+      )}
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>

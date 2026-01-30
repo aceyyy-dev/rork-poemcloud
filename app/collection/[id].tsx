@@ -18,7 +18,7 @@ import { getPoemById } from '@/mocks/poems';
 export default function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isIllustrated } = useTheme();
 
   const collection = getCollectionById(id);
   const poems = collection ? collection.poemIds.map(getPoemById).filter(Boolean) : [];
@@ -34,7 +34,7 @@ export default function CollectionDetailScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
       <View style={styles.heroContainer}>
         <Image
           source={{ uri: collection.coverImageUrl }}

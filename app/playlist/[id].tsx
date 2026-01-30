@@ -23,8 +23,8 @@ import CreatePlaylistModal from '@/components/CreatePlaylistModal';
 export default function PlaylistDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
-  const { getPlaylistById, deletePlaylist, removePoemFromPlaylist, updatePlaylist } = usePlaylists();
+  const { colors, isIllustrated } = useTheme();
+  const { getPlaylistById, deletePlaylist, removePoemFromPlaylist } = usePlaylists();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
 
@@ -105,11 +105,13 @@ export default function PlaylistDetailScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.gradientStart, colors.background]}
-        style={styles.gradient}
-      />
+    <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
+      {!isIllustrated && (
+        <LinearGradient
+          colors={[colors.gradientStart, colors.background]}
+          style={styles.gradient}
+        />
+      )}
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>

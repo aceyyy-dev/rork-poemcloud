@@ -55,7 +55,7 @@ const SUPPORTED_LANGUAGES = [
 export default function PoemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isIllustrated } = useTheme();
   const { isLiked, isBookmarked, toggleLike, toggleBookmark, markAsRead } = useUser();
   const { isPremium } = usePurchases();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -203,11 +203,13 @@ export default function PoemDetailScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <LinearGradient
-        colors={[colors.gradientStart, colors.background]}
-        style={styles.gradient}
-      />
+    <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
+      {!isIllustrated && (
+        <LinearGradient
+          colors={[colors.gradientStart, colors.background]}
+          style={styles.gradient}
+        />
+      )}
       
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.header}>

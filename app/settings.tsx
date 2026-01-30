@@ -38,7 +38,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBiometric } from '@/contexts/BiometricContext';
 import { countries } from '@/mocks/countries';
 import { Mood } from '@/types';
-import { premiumColorThemes, ThemeId } from '@/constants/colors';
+import { premiumColorThemes, illustratedThemes, ThemeId } from '@/constants/colors';
 import PremiumModal from '@/components/PremiumModal';
 import { triggerHaptic } from '@/utils/haptics';
 
@@ -48,7 +48,7 @@ const MAX_MOODS = 6;
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { colors, themeId, setTheme, isDark, currentThemeName, isPremiumTheme } = useTheme();
+  const { colors, themeId, setTheme, isDark, currentThemeName, isPremiumTheme, isIllustrated } = useTheme();
   const { preferences, updatePreferences } = useUser();
   const { isPremium, restorePurchases, isRestoring, manageSubscription, willRenew, expirationDate } = usePurchases();
   const { isLoggedIn, user, signOut, token } = useAuth();
@@ -150,8 +150,9 @@ export default function SettingsScreen() {
 
   const handleThemeSelect = (newThemeId: ThemeId) => {
     const isPremiumColorTheme = premiumColorThemes.some(t => t.id === newThemeId);
+    const isIllustratedTheme = illustratedThemes.some(t => t.id === newThemeId);
     
-    if (isPremiumColorTheme && !isPremium) {
+    if ((isPremiumColorTheme || isIllustratedTheme) && !isPremium) {
       triggerHaptic('medium');
       setShowThemeModal(false);
       setTimeout(() => setShowPremiumModal(true), 300);
@@ -165,7 +166,7 @@ export default function SettingsScreen() {
   
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: colors.primary }]}>Settings</Text>
@@ -571,6 +572,56 @@ export default function SettingsScreen() {
                         <View style={[styles.themePreviewCard, { backgroundColor: previewColors.card }]}>
                           <View style={[styles.themePreviewLine, { backgroundColor: previewColors.accent }]} />
                           <View style={[styles.themePreviewLineShort, { backgroundColor: previewColors.accent, opacity: 0.5 }]} />
+                        </View>
+                        {isLocked && (
+                          <View style={styles.lockedOverlay}>
+                            <Crown size={18} color={colors.accent} />
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.themeInfo}>
+                        <Text style={[styles.themeName, { color: colors.primary }]}>{theme.name}</Text>
+                        {isSelected && <Check size={16} color={colors.accent} />}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.premiumThemesHeader}>
+                <Text style={[styles.themeSectionLabel, { color: colors.textMuted }]}>POEMCLOUD+ ILLUSTRATED THEMES</Text>
+                {!isPremium && (
+                  <View style={[styles.premiumBadge, { backgroundColor: colors.accentLight }]}>
+                    <Crown size={12} color={colors.accent} />
+                    <Text style={[styles.premiumBadgeText, { color: colors.accent }]}>Premium</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.illustratedThemeDescription, { color: colors.textMuted }]}>
+                Calm illustrated backgrounds for immersive reading
+              </Text>
+
+              <View style={styles.themeGrid}>
+                {illustratedThemes.map((theme) => {
+                  const isSelected = themeId === theme.id;
+                  const isLocked = !isPremium;
+                  
+                  return (
+                    <TouchableOpacity
+                      key={theme.id}
+                      style={[
+                        styles.themeCard,
+                        { borderColor: isSelected ? colors.accent : colors.border },
+                        isSelected && styles.themeCardSelected,
+                      ]}
+                      onPress={() => handleThemeSelect(theme.id)}
+                    >
+                      <View style={[styles.illustratedPreview, { backgroundColor: theme.previewColors.bg }]}>
+                        <View style={styles.illustratedPreviewGradient}>
+                          <View style={[styles.illustratedPreviewCard, { backgroundColor: theme.previewColors.card }]}>
+                            <View style={[styles.themePreviewLine, { backgroundColor: theme.previewColors.accent }]} />
+                            <View style={[styles.themePreviewLineShort, { backgroundColor: theme.previewColors.accent, opacity: 0.5 }]} />
+                          </View>
                         </View>
                         {isLocked && (
                           <View style={styles.lockedOverlay}>
@@ -1011,5 +1062,30 @@ const styles = StyleSheet.create({
   themeName: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  illustratedThemeDescription: {
+    fontSize: 12,
+    marginBottom: 12,
+    marginTop: -4,
+  },
+  illustratedPreview: {
+    height: 80,
+    padding: 12,
+    justifyContent: 'center',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  illustratedPreviewGradient: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  illustratedPreviewCard: {
+    borderRadius: 8,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });
