@@ -2,11 +2,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { Animated, StyleSheet, View, ImageBackground } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
 import FogBackground from "@/components/FogBackground";
+import AppBackground from "@/components/AppBackground";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { UserProvider } from "@/contexts/UserContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import { WallpaperProvider, useWallpaper } from "@/contexts/WallpaperContext";
 import { PurchasesProvider } from "@/contexts/PurchasesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TTSProvider } from "@/contexts/TTSContext";
@@ -21,47 +23,33 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 
 const queryClient = new QueryClient();
 
-function IllustratedBackground({ children }: { children: React.ReactNode }) {
-  const { isIllustrated, illustratedTheme, colors } = useTheme();
+function RootBackground({ children }: { children: React.ReactNode }) {
+  const { hasWallpaper } = useWallpaper();
+  const { colors } = useTheme();
 
-  if (!isIllustrated || !illustratedTheme) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+  return (
+    <AppBackground>
+      <View style={[styles.container, { backgroundColor: hasWallpaper ? 'transparent' : colors.background }]}>
         <FogBackground />
         {children}
       </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={{ uri: illustratedTheme.backgroundImage }}
-        style={styles.illustratedBg}
-        resizeMode="cover"
-      >
-        <View style={[styles.overlay, { backgroundColor: illustratedTheme.overlayColor }]} />
-      </ImageBackground>
-      <FogBackground />
-      <View style={styles.contentLayer}>
-        {children}
-      </View>
-    </View>
+    </AppBackground>
   );
 }
 
 function RootLayoutNav() {
-  const { colors, transitionOpacity, isIllustrated } = useTheme();
+  const { colors, transitionOpacity } = useTheme();
+  const { hasWallpaper } = useWallpaper();
   
   return (
-    <IllustratedBackground>
+    <RootBackground>
     <Animated.View style={[styles.container, { opacity: transitionOpacity }]}>
     <Stack
       screenOptions={{
         headerBackTitle: "Back",
-        headerStyle: { backgroundColor: isIllustrated ? 'transparent' : colors.background },
+        headerStyle: { backgroundColor: hasWallpaper ? 'transparent' : colors.background },
         headerTintColor: colors.primary,
-        contentStyle: { backgroundColor: isIllustrated ? 'transparent' : colors.background },
+        contentStyle: { backgroundColor: hasWallpaper ? 'transparent' : colors.background },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -134,21 +122,12 @@ function RootLayoutNav() {
       />
     </Stack>
     </Animated.View>
-    </IllustratedBackground>
+    </RootBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  illustratedBg: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  contentLayer: {
     flex: 1,
   },
 });
@@ -164,6 +143,7 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider>
+          <WallpaperProvider>
             <PurchasesProvider>
               <AuthProvider>
                 <BiometricProvider>
@@ -179,6 +159,7 @@ export default function RootLayout() {
                 </BiometricProvider>
               </AuthProvider>
             </PurchasesProvider>
+          </WallpaperProvider>
           </ThemeProvider>
         </GestureHandlerRootView>
     </QueryClientProvider>
