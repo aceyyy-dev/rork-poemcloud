@@ -12,15 +12,11 @@ import {
 } from '@/constants/colors';
 
 const THEME_STORAGE_KEY = 'poemcloud_theme';
-const APPEARANCE_STORAGE_KEY = 'poemcloud_appearance';
-
-type AppearanceMode = 'light' | 'dark' | 'system';
 
 export const [ThemeProvider, useTheme] = createContextHook(() => {
   const systemColorScheme = useColorScheme();
   const queryClient = useQueryClient();
   const [themeId, setThemeId] = useState<ThemeId>('system');
-  const [appearanceMode, setAppearanceMode] = useState<AppearanceMode>('system');
   const transitionOpacity = useRef(new Animated.Value(1)).current;
 
   const themeQuery = useQuery({
@@ -28,15 +24,12 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     queryFn: async () => {
       try {
         const storedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-        const storedAppearance = await AsyncStorage.getItem(APPEARANCE_STORAGE_KEY);
-        
         return {
           themeId: (storedTheme as ThemeId) || 'system',
-          appearanceMode: (storedAppearance as AppearanceMode) || 'system',
         };
       } catch (error) {
         console.log('[Theme] Error loading theme settings:', error);
-        return { themeId: 'system' as ThemeId, appearanceMode: 'system' as AppearanceMode };
+        return { themeId: 'system' as ThemeId };
       }
     },
   });
@@ -44,24 +37,13 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
   useEffect(() => {
     if (themeQuery.data) {
       setThemeId(themeQuery.data.themeId);
-      setAppearanceMode(themeQuery.data.appearanceMode);
     }
   }, [themeQuery.data]);
 
-  const saveThemeMutation = useMutation({
+  const { mutate: saveTheme } = useMutation({
     mutationFn: async (newThemeId: ThemeId) => {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, newThemeId);
       return newThemeId;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['themeSettings'] });
-    },
-  });
-
-  const saveAppearanceMutation = useMutation({
-    mutationFn: async (mode: AppearanceMode) => {
-      await AsyncStorage.setItem(APPEARANCE_STORAGE_KEY, mode);
-      return mode;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['themeSettings'] });
@@ -83,51 +65,30 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     ]).start();
   }, [transitionOpacity]);
 
-  const saveTheme = saveThemeMutation.mutate;
-  const saveAppearance = saveAppearanceMutation.mutate;
-
   const setTheme = useCallback((newThemeId: ThemeId) => {
     console.log('[Theme] Setting theme to:', newThemeId);
     animateTransition();
-    
-    if (newThemeId === 'light' || newThemeId === 'dark' || newThemeId === 'system') {
-      setThemeId(newThemeId);
-      setAppearanceMode(newThemeId);
-      saveTheme(newThemeId);
-      saveAppearance(newThemeId);
-    } else {
-      setThemeId(newThemeId);
-      saveTheme(newThemeId);
-    }
-  }, [saveTheme, saveAppearance, animateTransition]);
-
-  const setAppearance = useCallback((mode: AppearanceMode) => {
-    console.log('[Theme] Setting appearance to:', mode);
-    animateTransition();
-    setAppearanceMode(mode);
-    saveAppearance(mode);
-  }, [saveAppearance, animateTransition]);
-
-  const isDark = useMemo(() => {
-    if (themeId === 'light') return false;
-    if (themeId === 'dark') return true;
-    if (themeId === 'system') {
-      return systemColorScheme === 'dark';
-    }
-    
-    if (appearanceMode === 'system') {
-      return systemColorScheme === 'dark';
-    }
-    return appearanceMode === 'dark';
-  }, [themeId, appearanceMode, systemColorScheme]);
-
-  const colors: ThemeColors = useMemo(() => {
-    return getThemeColors(themeId, isDark);
-  }, [themeId, isDark]);
+    setThemeId(newThemeId);
+    saveTheme(newThemeId);
+  }, [saveTheme, animateTransition]);
 
   const isPremiumTheme = useMemo(() => {
     return premiumThemes.some(t => t.id === themeId);
   }, [themeId]);
+
+  const isDark = useMemo(() => {
+    if (isPremiumTheme) {
+      return true;
+    }
+    
+    if (themeId === 'light') return false;
+    if (themeId === 'dark') return true;
+    return systemColorScheme === 'dark';
+  }, [themeId, isPremiumTheme, systemColorScheme]);
+
+  const colors: ThemeColors = useMemo(() => {
+    return getThemeColors(themeId, isDark);
+  }, [themeId, isDark]);
 
   const currentThemeName = useMemo(() => {
     if (themeId === 'light') return 'Light';
@@ -144,9 +105,7 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
 
   return {
     themeId,
-    appearanceMode,
     setTheme,
-    setAppearance,
     isDark,
     colors,
     isLoading: themeQuery.isLoading,

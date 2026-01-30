@@ -14,9 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
   X,
-  Sun,
-  Moon,
-  Smartphone,
   Heart,
   Globe,
   Crown,
@@ -46,7 +43,7 @@ const MAX_MOODS = 6;
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { colors, themeId, setTheme, isDark, appearanceMode, setAppearance, currentThemeName, isPremiumTheme } = useTheme();
+  const { colors, themeId, setTheme, isDark, currentThemeName, isPremiumTheme } = useTheme();
   const { preferences, updatePreferences } = useUser();
   const { isPremium, restorePurchases, isRestoring, manageSubscription, willRenew, expirationDate } = usePurchases();
   const { isLoggedIn, user, signOut } = useAuth();
@@ -123,16 +120,7 @@ export default function SettingsScreen() {
     setTheme(newThemeId);
   };
 
-  const handleAppearanceChange = (mode: 'light' | 'dark' | 'system') => {
-    triggerHaptic('light');
-    setAppearance(mode);
-  };
-
-  const appearanceOptions = [
-    { value: 'light' as const, label: 'Light', icon: Sun },
-    { value: 'dark' as const, label: 'Dark', icon: Moon },
-    { value: 'system' as const, label: 'System', icon: Smartphone },
-  ];
+  
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -171,44 +159,6 @@ export default function SettingsScreen() {
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
-
-              {isPremiumTheme && (
-                <View style={styles.appearanceSection}>
-                  <Text style={[styles.appearanceLabel, { color: colors.primary }]}>Appearance</Text>
-                  <View style={styles.appearanceOptions}>
-                    {appearanceOptions.map((option) => {
-                      const Icon = option.icon;
-                      const isSelected = appearanceMode === option.value;
-                      return (
-                        <TouchableOpacity
-                          key={option.value}
-                          style={[
-                            styles.appearanceOption,
-                            { backgroundColor: colors.surfaceSecondary, borderColor: colors.border },
-                            isSelected && { borderColor: colors.accent, backgroundColor: colors.accentLight },
-                          ]}
-                          onPress={() => handleAppearanceChange(option.value)}
-                        >
-                          <Icon
-                            size={18}
-                            color={isSelected ? colors.accent : colors.textMuted}
-                            strokeWidth={1.5}
-                          />
-                          <Text
-                            style={[
-                              styles.appearanceOptionText,
-                              { color: colors.textMuted },
-                              isSelected && { color: colors.accent, fontWeight: '600' as const },
-                            ]}
-                          >
-                            {option.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-              )}
             </View>
           </View>
 
@@ -515,7 +465,7 @@ export default function SettingsScreen() {
               <View style={styles.themeGrid}>
                 {premiumThemes.map((theme) => {
                   const isSelected = themeId === theme.id;
-                  const previewColors = isDark ? theme.previewColors.dark : theme.previewColors.light;
+                  const previewColors = theme.previewColors;
                   const isLocked = !isPremium;
                   
                   return (
@@ -738,32 +688,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
-  },
-  appearanceSection: {
-    padding: 16,
-    paddingTop: 8,
-  },
-  appearanceLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  appearanceOptions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  appearanceOption: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1.5,
-  },
-  appearanceOptionText: {
-    fontSize: 13,
   },
   settingRow: {
     flexDirection: 'row',
