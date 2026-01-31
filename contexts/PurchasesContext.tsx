@@ -10,10 +10,15 @@ import Purchases, {
 
 const ENTITLEMENT_ID = 'premium';
 
-function getRCToken() {
-  if (__DEV__ || Platform.OS === 'web') {
+type RevenueCatConfigureResult =
+  | { ok: true; apiKey: string }
+  | { ok: false; reason: string };
+
+function getRevenueCatApiKey(): string | undefined {
+  if (__DEV__) {
     return process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
   }
+
   return Platform.select({
     ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
     android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
@@ -21,13 +26,57 @@ function getRCToken() {
   });
 }
 
-const apiKey = getRCToken();
-if (apiKey) {
-  Purchases.setLogLevel(LOG_LEVEL.DEBUG);
-  Purchases.configure({ apiKey });
-  console.log('[RevenueCat] Configured with API key');
-} else {
-  console.warn('[RevenueCat] No API key found');
+function formatRevenueCatError(error: unknown): string {
+  try {
+    if (error && typeof error === 'object') {
+      const anyErr = error as Record<string, unknown>;
+      const message = typeof anyErr.message === 'string' ? anyErr.message : undefined;
+      const code = typeof anyErr.code === 'string' ? anyErr.code : undefined;
+      const userCancelled = typeof anyErr.userCancelled === 'boolean' ? anyErr.userCancelled : undefined;
+
+      const json = JSON.stringify(anyErr, (_key, value) => {
+        if (typeof value === 'function') return '[function]';
+        if (value instanceof Error) {
+          return { name: value.name, message: value.message, stack: value.stack };
+        }
+        return value;
+      });
+
+      return [
+        message ? `message=${message}` : null,
+        code ? `code=${code}` : null,
+        typeof userCancelled === 'boolean' ? `userCancelled=${String(userCancelled)}` : null,
+        json ? `raw=${json}` : null,
+      ]
+        .filter(Boolean)
+        .join(' | ');
+    }
+
+    return String(error);
+  } catch (e) {
+    return `Unserializable error: ${String(error)} | stringifyError=${String(e)}`;
+  }
+}
+
+function configureRevenueCat(): RevenueCatConfigureResult {
+  if (Platform.OS === 'web') {
+    return { ok: false, reason: 'RevenueCat is not supported on web.' };
+  }
+
+  const apiKey = getRevenueCatApiKey();
+  if (!apiKey) {
+    return { ok: false, reason: 'Missing RevenueCat API key.' };
+  }
+
+  try {
+    Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
+    Purchases.configure({ apiKey });
+    console.log('[RevenueCat] Configured');
+    return { ok: true, apiKey };
+  } catch (error) {
+    console.error('[RevenueCat] Failed to configure:', formatRevenueCatError(error));
+    return { ok: false, reason: 'Failed to configure RevenueCat.' };
+  }
 }
 
 type PurchaseResult = 'success' | 'cancelled' | 'error' | null;
@@ -36,15 +85,28 @@ const SUCCESS_DEBOUNCE_MS = 2000;
 
 export const [PurchasesProvider, usePurchases] = createContextHook(() => {
   const queryClient = useQueryClient();
-  const [isConfigured] = useState(!!apiKey);
+  const [isConfigured, setIsConfigured] = useState<boolean>(false);
+  const [configureReason, setConfigureReason] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastPurchaseResult, setLastPurchaseResult] = useState<PurchaseResult>(null);
   const onSuccessCallbackRef = useRef<(() => void) | null>(null);
   const lastSuccessAtRef = useRef<number>(0);
   const previousPremiumRef = useRef<boolean | null>(null);
 
+  useEffect(() => {
+    const result = configureRevenueCat();
+    if (result.ok) {
+      setIsConfigured(true);
+      setConfigureReason(null);
+    } else {
+      setIsConfigured(false);
+      setConfigureReason(result.reason);
+      console.warn('[RevenueCat] Disabled:', result.reason);
+    }
+  }, []);
+
   const customerInfoQuery = useQuery({
-    queryKey: ['customerInfo'],
+    queryKey: ['customerInfo', isConfigured],
     queryFn: async () => {
       if (!isConfigured) return null;
       try {
@@ -56,7 +118,7 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
         console.log('[RevenueCat] Active subscriptions:', info.activeSubscriptions);
         return info;
       } catch (error) {
-        console.error('[RevenueCat] Error fetching customer info:', error);
+        console.error('[RevenueCat] Error fetching customer info:', formatRevenueCatError(error));
         return null;
       }
     },
@@ -65,7 +127,7 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
   });
 
   const offeringsQuery = useQuery({
-    queryKey: ['offerings'],
+    queryKey: ['offerings', isConfigured],
     queryFn: async () => {
       if (!isConfigured) return null;
       try {
@@ -73,7 +135,7 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
         console.log('[RevenueCat] Offerings fetched:', offerings.current?.identifier);
         return offerings;
       } catch (error) {
-        console.error('[RevenueCat] Error fetching offerings:', error);
+        console.error('[RevenueCat] Error fetching offerings:', formatRevenueCatError(error));
         return null;
       }
     },
@@ -102,15 +164,15 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
         setShowSuccessModal(true);
       }
     },
-    onError: (error: any) => {
-      if (error?.userCancelled) {
+    onError: (error: unknown) => {
+      const anyErr = error as any;
+      if (anyErr?.userCancelled) {
         console.log('[RevenueCat] Purchase result: cancelled');
         setLastPurchaseResult('cancelled');
         return;
       }
-      const errorMessage = error?.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
       console.error('[RevenueCat] Purchase result: error');
-      console.error('[RevenueCat] Purchase error:', errorMessage);
+      console.error('[RevenueCat] Purchase error:', formatRevenueCatError(error));
       setLastPurchaseResult('error');
       Alert.alert('Purchase Failed', 'An error occurred during purchase. Please try again.');
     },
@@ -133,9 +195,10 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
         Alert.alert('No Subscription Found', 'No active subscription was found to restore.');
       }
     },
-    onError: (error: any) => {
-      console.error('[RevenueCat] Restore error:', error);
-      Alert.alert('Restore Failed', error.message || 'An error occurred while restoring purchases.');
+    onError: (error: unknown) => {
+      console.error('[RevenueCat] Restore error:', formatRevenueCatError(error));
+      const anyErr = error as any;
+      Alert.alert('Restore Failed', anyErr?.message || 'An error occurred while restoring purchases.');
     },
   });
 
@@ -175,14 +238,17 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
     (pkg) => pkg.packageType === 'ANNUAL' || pkg.identifier === '$rc_annual'
   );
 
+  const purchaseMutateAsync = purchaseMutation.mutateAsync;
+  const restoreMutateAsync = restoreMutation.mutateAsync;
+
   const purchasePackage = useCallback(async (pkg: PurchasesPackage) => {
     setLastPurchaseResult(null);
-    return purchaseMutation.mutateAsync(pkg);
-  }, [purchaseMutation]);
+    return purchaseMutateAsync(pkg);
+  }, [purchaseMutateAsync]);
 
   const restorePurchases = useCallback(async () => {
-    return restoreMutation.mutateAsync();
-  }, [restoreMutation]);
+    return restoreMutateAsync();
+  }, [restoreMutateAsync]);
 
   const refreshEntitlement = useCallback(async () => {
     console.log('[RevenueCat] Refreshing entitlement...');
@@ -228,6 +294,7 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
 
   return {
     isConfigured,
+    configureReason,
     isPremium,
     willRenew,
     expirationDate,
