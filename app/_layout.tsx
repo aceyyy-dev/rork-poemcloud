@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { Animated, Platform, StyleSheet, View } from "react-native";
 import FogBackground from "@/components/FogBackground";
 import AppBackground from "@/components/AppBackground";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -19,9 +19,11 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { trpc, trpcClient } from "@/lib/trpc";
 
 
-SplashScreen.preventAutoHideAsync().catch(() => {
-  // Ignore error on web or when splash screen is not available
-});
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync().catch(() => {
+    // Ignore error on web or when splash screen is not available
+  });
+}
 
 const queryClient = new QueryClient();
 
@@ -136,9 +138,16 @@ const styles = StyleSheet.create({
 
 export default function RootLayout() {
   useEffect(() => {
-    SplashScreen.hideAsync().catch(() => {
-      // Ignore error on web or when splash screen is not available
-    });
+    const hideSplash = async () => {
+      if (Platform.OS !== 'web') {
+        try {
+          await SplashScreen.hideAsync();
+        } catch {
+          // Ignore error when splash screen is not available
+        }
+      }
+    };
+    hideSplash();
   }, []);
 
   const [trpcClientInstance] = useState(() => trpcClient);
