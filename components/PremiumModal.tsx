@@ -104,9 +104,8 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
     }
     try {
       console.log('[PremiumModal] Starting purchase...');
-      await purchasePackage(selectedPackage);
-      console.log('[PremiumModal] Purchase flow completed');
-      triggerHaptic('success');
+      const customerInfo = await purchasePackage(selectedPackage);
+      console.log('[PremiumModal] Purchase flow completed, customerInfo:', customerInfo ? 'received' : 'null');
     } catch (error: any) {
       console.log('[PremiumModal] Purchase error:', error);
       if (error.userCancelled) {
@@ -119,12 +118,12 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
   };
 
   const handleSuccessComplete = () => {
-    console.log('[PremiumModal] Success animation complete');
+    console.log('[PremiumModal] Success animation complete, closing modal');
     hideSuccessModal();
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       onSubscribe();
       onClose();
-    });
+    }, 100);
   };
 
   const handleRestore = async () => {

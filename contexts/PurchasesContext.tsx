@@ -95,6 +95,7 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
   const [configureReason, setConfigureReason] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastPurchaseResult, setLastPurchaseResult] = useState<PurchaseResult>(null);
+  const [localPremiumOverride, setLocalPremiumOverride] = useState<boolean | null>(null);
   const onSuccessCallbackRef = useRef<(() => void) | null>(null);
   const lastSuccessAtRef = useRef<number>(0);
   const previousPremiumRef = useRef<boolean | null>(null);
@@ -158,16 +159,21 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       return customerInfo;
     },
     onSuccess: (customerInfo) => {
-      const isPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
+      const hasPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
       console.log('[RevenueCat] Purchase successful');
       console.log('[RevenueCat] Purchase result: success');
-      console.log('[RevenueCat] isPremium after purchase:', isPremium);
+      console.log('[RevenueCat] isPremium after purchase:', hasPremium);
+      
+      if (hasPremium) {
+        setLocalPremiumOverride(true);
+        console.log('[RevenueCat] Set local premium override to true');
+      }
+      
       queryClient.setQueryData(customerInfoQueryKey(true), customerInfo);
-      queryClient.invalidateQueries({ queryKey: ['customerInfo'] }).catch(() => {});
       setLastPurchaseResult('success');
       
       const now = Date.now();
-      if (isPremium && now - lastSuccessAtRef.current > SUCCESS_DEBOUNCE_MS) {
+      if (hasPremium && now - lastSuccessAtRef.current > SUCCESS_DEBOUNCE_MS) {
         lastSuccessAtRef.current = now;
         console.log('[RevenueCat] Showing success modal (debounced)');
         setShowSuccessModal(true);
@@ -196,12 +202,17 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       return customerInfo;
     },
     onSuccess: (customerInfo) => {
-      const isPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
+      const hasPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
       console.log('[RevenueCat] Restore successful');
-      console.log('[RevenueCat] isPremium after restore:', isPremium);
+      console.log('[RevenueCat] isPremium after restore:', hasPremium);
+      
+      if (hasPremium) {
+        setLocalPremiumOverride(true);
+        console.log('[RevenueCat] Set local premium override to true (restore)');
+      }
+      
       queryClient.setQueryData(customerInfoQueryKey(true), customerInfo);
-      queryClient.invalidateQueries({ queryKey: ['customerInfo'] }).catch(() => {});
-      if (isPremium) {
+      if (hasPremium) {
         Alert.alert('Restored!', 'Your PoemCloud+ subscription has been restored.');
       } else {
         Alert.alert('No Subscription Found', 'No active subscription was found to restore.');
@@ -225,8 +236,14 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
         console.log('[RevenueCat] Customer info updated via listener');
         console.log('[RevenueCat] isPremium changed:', oldIsPremium, '->', newIsPremium);
         previousPremiumRef.current = newIsPremium;
+        
+        if (newIsPremium) {
+          setLocalPremiumOverride(true);
+        } else {
+          setLocalPremiumOverride(null);
+        }
+        
         queryClient.setQueryData(customerInfoQueryKey(true), info);
-        queryClient.invalidateQueries({ queryKey: ['customerInfo'] }).catch(() => {});
       }
     };
 
@@ -236,7 +253,8 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
     };
   }, [isConfigured, queryClient]);
 
-  const isPremium = customerInfoQuery.data?.entitlements.active[ENTITLEMENT_ID] !== undefined;
+  const queryIsPremium = customerInfoQuery.data?.entitlements.active[ENTITLEMENT_ID] !== undefined;
+  const isPremium = localPremiumOverride === true || queryIsPremium;
   const willRenew = customerInfoQuery.data?.entitlements.active[ENTITLEMENT_ID]?.willRenew ?? false;
   const expirationDate = customerInfoQuery.data?.entitlements.active[ENTITLEMENT_ID]?.expirationDate;
   const productIdentifier = customerInfoQuery.data?.entitlements.active[ENTITLEMENT_ID]?.productIdentifier;
@@ -265,8 +283,24 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
 
   const refreshEntitlement = useCallback(async () => {
     console.log('[RevenueCat] Refreshing entitlement...');
-    await queryClient.invalidateQueries({ queryKey: ['customerInfo'] });
-  }, [queryClient]);
+    if (!isConfigured) return;
+    
+    try {
+      const info = await Purchases.getCustomerInfo();
+      const hasPremium = info.entitlements.active[ENTITLEMENT_ID] !== undefined;
+      console.log('[RevenueCat] Refresh result - isPremium:', hasPremium);
+      
+      if (hasPremium) {
+        setLocalPremiumOverride(true);
+      } else {
+        setLocalPremiumOverride(null);
+      }
+      
+      queryClient.setQueryData(customerInfoQueryKey(true), info);
+    } catch (error) {
+      console.error('[RevenueCat] Refresh error:', formatRevenueCatError(error));
+    }
+  }, [queryClient, isConfigured]);
 
   const getMonthlyPrice = useCallback(() => {
     return monthlyPackage?.product.priceString || '$9.99';
