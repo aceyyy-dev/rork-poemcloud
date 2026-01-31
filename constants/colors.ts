@@ -131,6 +131,8 @@ export type ThemeId =
   | 'dawn-pages'
   | 'fog-silence'
   | 'nocturne-violet'
+  | 'still-paper'
+  | 'quiet-sky'
   | 'morning-light'
   | 'golden-dusk'
   | 'blue-hour';
@@ -337,6 +339,96 @@ const nocturneViolet: ThemeColors = {
   },
 };
 
+const stillPaper: ThemeColors = {
+  primary: '#1a1a1a',
+  secondary: '#4a4a4a',
+  accent: '#7a8b9a',
+  accentLight: '#e8ecf0',
+  background: '#f7f6f3',
+  surface: '#efede8',
+  surfaceSecondary: '#e8e5df',
+  text: '#1a1a1a',
+  textLight: '#4a4a4a',
+  textMuted: '#7a7a7a',
+  textWhite: '#ffffff',
+  cloud1: '#efede8',
+  cloud2: '#f2f0eb',
+  cloud3: '#eae8e3',
+  cloud4: '#f5f3ee',
+  gradientStart: '#f7f6f3',
+  gradientMid: '#f2f0eb',
+  gradientEnd: '#f7f6f3',
+  cardBg: 'rgba(239, 237, 232, 0.95)',
+  overlay: 'rgba(26, 26, 26, 0.4)',
+  premium: '#7a8b9a',
+  premiumLight: '#e8ecf0',
+  mood: {
+    calm: '#8a9aa8',
+    sad: '#9a9aaa',
+    love: '#c4a0a0',
+    hope: '#9ab8a5',
+    melancholy: '#a0a0b8',
+    healing: '#8ab8a8',
+    longing: '#a8a0b8',
+    joy: '#b8b890',
+    reflection: '#90a8b8',
+  },
+  border: '#dddad4',
+  borderLight: '#e8e5df',
+  success: '#8ab8a0',
+  error: '#b89090',
+  tabBar: {
+    active: '#1a1a1a',
+    inactive: '#7a7a7a',
+    background: '#f7f6f3',
+  },
+};
+
+const quietSky: ThemeColors = {
+  primary: '#2a2e3a',
+  secondary: '#5a6070',
+  accent: '#8090a8',
+  accentLight: '#e0e5ec',
+  background: '#eef2f7',
+  surface: '#e4e9f0',
+  surfaceSecondary: '#dce2eb',
+  text: '#2a2e3a',
+  textLight: '#5a6070',
+  textMuted: '#8890a0',
+  textWhite: '#ffffff',
+  cloud1: '#e4e9f0',
+  cloud2: '#e8ecf2',
+  cloud3: '#dfe4ec',
+  cloud4: '#ebeff5',
+  gradientStart: '#eef2f7',
+  gradientMid: '#e8ecf2',
+  gradientEnd: '#eef2f7',
+  cardBg: 'rgba(228, 233, 240, 0.95)',
+  overlay: 'rgba(42, 46, 58, 0.4)',
+  premium: '#8090a8',
+  premiumLight: '#e0e5ec',
+  mood: {
+    calm: '#8aa0b8',
+    sad: '#9098b0',
+    love: '#c0a0a8',
+    hope: '#98b8a8',
+    melancholy: '#a098b8',
+    healing: '#90b8b0',
+    longing: '#a8a0b8',
+    joy: '#b8b898',
+    reflection: '#90a8c0',
+  },
+  border: '#d0d8e2',
+  borderLight: '#dce2eb',
+  success: '#90b8a0',
+  error: '#b89898',
+  tabBar: {
+    active: '#2a2e3a',
+    inactive: '#8890a0',
+    background: '#eef2f7',
+  },
+};
+
 const morningLight: ThemeColors = {
   primary: '#5c4a3a',
   secondary: '#8b7a68',
@@ -500,6 +592,20 @@ export const premiumColorThemes: PremiumThemeDefinition[] = [
     isPremium: true,
     previewColors: { bg: '#14121a', card: '#201e28', accent: '#9a88c8' },
     colors: nocturneViolet,
+  },
+  {
+    id: 'still-paper',
+    name: 'Still Paper',
+    isPremium: true,
+    previewColors: { bg: '#f7f6f3', card: '#efede8', accent: '#7a8b9a' },
+    colors: stillPaper,
+  },
+  {
+    id: 'quiet-sky',
+    name: 'Quiet Sky',
+    isPremium: true,
+    previewColors: { bg: '#eef2f7', card: '#e4e9f0', accent: '#8090a8' },
+    colors: quietSky,
   },
 ];
 

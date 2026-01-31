@@ -126,6 +126,12 @@ export default function HomeScreen() {
     return <Onboarding onComplete={handleOnboardingComplete} />;
   }
 
+  const formatPoetYears = (birthYear?: number, deathYear?: number): string => {
+    if (!birthYear) return '';
+    if (deathYear) return `(${birthYear}–${deathYear})`;
+    return `(b. ${birthYear})`;
+  };
+
   const trendingPoems = poems.slice(0, 4);
   const moodPoems = preferences.moods.length > 0 
     ? getPoemsByMood(preferences.moods[0]).slice(0, 3)
@@ -186,6 +192,11 @@ export default function HomeScreen() {
                 <View style={styles.heroContent}>
                   <Text style={[styles.heroTitle, { color: colors.primary }]}>{todaysPoem.title}</Text>
                   <Text style={[styles.heroPoet, { color: colors.text }]}>{todaysPoem.poet.name}</Text>
+                  {formatPoetYears(todaysPoem.poet.birthYear, todaysPoem.poet.deathYear) ? (
+                    <Text style={[styles.heroPoetYears, { color: colors.textMuted }]}>
+                      {formatPoetYears(todaysPoem.poet.birthYear, todaysPoem.poet.deathYear)}
+                    </Text>
+                  ) : null}
                   <Text style={[styles.heroCountry, { color: colors.textMuted }]}>{todaysPoem.country}</Text>
                   
                   <Text style={[styles.heroExcerpt, { color: colors.text }]} numberOfLines={6}>
@@ -276,6 +287,11 @@ export default function HomeScreen() {
                   >
                     <Text style={[styles.trendingTitle, { color: colors.primary }]} numberOfLines={2}>{poem.title}</Text>
                     <Text style={[styles.trendingPoet, { color: colors.textMuted }]}>{poem.poet.name}</Text>
+                    {formatPoetYears(poem.poet.birthYear, poem.poet.deathYear) ? (
+                      <Text style={[styles.trendingPoetYears, { color: colors.textMuted }]}>
+                        {formatPoetYears(poem.poet.birthYear, poem.poet.deathYear)}
+                      </Text>
+                    ) : null}
                     <View style={styles.trendingMood}>
                       <View style={[styles.moodDot, { backgroundColor: colors.mood[poem.moods[0]] }]} />
                       <Text style={[styles.moodText, { color: colors.textMuted }]}>{poem.moods[0]}</Text>
@@ -304,7 +320,11 @@ export default function HomeScreen() {
                 >
                   <View style={styles.listContent}>
                     <Text style={[styles.listTitle, { color: colors.primary }]}>{poem.title}</Text>
-                    <Text style={[styles.listPoet, { color: colors.textMuted }]}>{poem.poet.name} • {poem.country}</Text>
+                    <Text style={[styles.listPoet, { color: colors.textMuted }]}>
+                      {poem.poet.name}
+                      {formatPoetYears(poem.poet.birthYear, poem.poet.deathYear) ? ` ${formatPoetYears(poem.poet.birthYear, poem.poet.deathYear)}` : ''}
+                      {' • '}{poem.country}
+                    </Text>
                   </View>
                   <View style={styles.listMoodTag}>
                     <View style={[styles.moodDot, { backgroundColor: colors.mood[preferences.moods[0] || 'calm'] }]} />
@@ -487,7 +507,11 @@ const styles = StyleSheet.create({
   },
   heroPoet: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '500' as const,
+    marginBottom: 2,
+  },
+  heroPoetYears: {
+    fontSize: 13,
     marginBottom: 2,
   },
   heroCountry: {
@@ -568,7 +592,11 @@ const styles = StyleSheet.create({
   },
   trendingPoet: {
     fontSize: 13,
-    marginBottom: 12,
+    marginBottom: 2,
+  },
+  trendingPoetYears: {
+    fontSize: 11,
+    marginBottom: 10,
   },
   trendingMood: {
     flexDirection: 'row',

@@ -1,21 +1,17 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
+  Platform,
 } from 'react-native';
 import { Heart, Bookmark, Share2, Headphones, Languages, Crown } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Colors from '@/constants/colors';
 import { Poem } from '@/types';
 import { useUser } from '@/contexts/UserContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
-
-const { height } = Dimensions.get('window');
 
 interface Props {
   poem: Poem;
@@ -23,6 +19,12 @@ interface Props {
   onPremiumPress?: () => void;
   showActions?: boolean;
   fullScreen?: boolean;
+}
+
+function formatPoetYears(birthYear?: number, deathYear?: number): string {
+  if (!birthYear) return '';
+  if (deathYear) return `(${birthYear}–${deathYear})`;
+  return `(b. ${birthYear})`;
 }
 
 export default function PoemCard({
@@ -33,10 +35,12 @@ export default function PoemCard({
   fullScreen = false,
 }: Props) {
   const { isLiked, isBookmarked, toggleLike, toggleBookmark, preferences } = useUser();
+  const { colors } = useTheme();
   const liked = isLiked(poem.id);
   const bookmarked = isBookmarked(poem.id);
   const likeScale = useRef(new Animated.Value(1)).current;
   const bookmarkScale = useRef(new Animated.Value(1)).current;
+  const poetYears = formatPoetYears(poem.poet.birthYear, poem.poet.deathYear);
 
   const handleLike = () => {
     if (Platform.OS !== 'web') {
@@ -97,15 +101,18 @@ export default function PoemCard({
 
   return (
     <TouchableOpacity
-      style={[styles.container, fullScreen && styles.fullScreen]}
+      style={[styles.container, fullScreen && styles.fullScreen, { backgroundColor: colors.surface }]}
       onPress={onPress}
       activeOpacity={0.95}
       disabled={!onPress}
     >
       <View style={styles.header}>
         <View style={styles.poetInfo}>
-          <Text style={styles.poetName}>{poem.poet.name}</Text>
-          <Text style={styles.countryText}>
+          <Text style={[styles.poetName, { color: colors.primary }]}>{poem.poet.name}</Text>
+          {poetYears ? (
+            <Text style={[styles.poetYears, { color: colors.textMuted }]}>{poetYears}</Text>
+          ) : null}
+          <Text style={[styles.countryText, { color: colors.textMuted }]}>
             {poem.country}
             {poem.originalLanguage !== 'English' && ` • ${poem.originalLanguage}`}
           </Text>
@@ -113,20 +120,20 @@ export default function PoemCard({
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title}>{poem.title}</Text>
-        <Text style={styles.poemText}>{truncatedText}</Text>
+        <Text style={[styles.title, { color: colors.primary }]}>{poem.title}</Text>
+        <Text style={[styles.poemText, { color: colors.text }]}>{truncatedText}</Text>
         {poem.text.length > 600 && (
-          <Text style={styles.readMore}>Continue reading...</Text>
+          <Text style={[styles.readMore, { color: colors.accent }]}>Continue reading...</Text>
         )}
       </View>
 
       {showActions && (
-        <View style={styles.actions}>
+        <View style={[styles.actions, { borderTopColor: colors.borderLight }]}>
           <TouchableOpacity onPress={handleLike} style={styles.actionButton}>
             <Animated.View style={{ transform: [{ scale: likeScale }] }}>
               <Heart
                 size={24}
-                color={liked ? '#e85d75' : Colors.textLight}
+                color={liked ? '#e85d75' : colors.textLight}
                 fill={liked ? '#e85d75' : 'transparent'}
                 strokeWidth={1.5}
               />
@@ -137,15 +144,15 @@ export default function PoemCard({
             <Animated.View style={{ transform: [{ scale: bookmarkScale }] }}>
               <Bookmark
                 size={24}
-                color={bookmarked ? Colors.accent : Colors.textLight}
-                fill={bookmarked ? Colors.accent : 'transparent'}
+                color={bookmarked ? colors.accent : colors.textLight}
+                fill={bookmarked ? colors.accent : 'transparent'}
                 strokeWidth={1.5}
               />
             </Animated.View>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={handleShare} style={styles.actionButton}>
-            <Share2 size={24} color={Colors.textLight} strokeWidth={1.5} />
+            <Share2 size={24} color={colors.textLight} strokeWidth={1.5} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -155,11 +162,11 @@ export default function PoemCard({
             <View style={styles.premiumAction}>
               <Headphones
                 size={24}
-                color={preferences.isPremium ? Colors.textLight : Colors.accent}
+                color={preferences.isPremium ? colors.textLight : colors.accent}
                 strokeWidth={1.5}
               />
               {!preferences.isPremium && (
-                <Crown size={10} color={Colors.accent} style={styles.crownIcon} />
+                <Crown size={10} color={colors.accent} style={styles.crownIcon} />
               )}
             </View>
           </TouchableOpacity>
@@ -171,11 +178,11 @@ export default function PoemCard({
             <View style={styles.premiumAction}>
               <Languages
                 size={24}
-                color={preferences.isPremium ? Colors.textLight : Colors.accent}
+                color={preferences.isPremium ? colors.textLight : colors.accent}
                 strokeWidth={1.5}
               />
               {!preferences.isPremium && (
-                <Crown size={10} color={Colors.accent} style={styles.crownIcon} />
+                <Crown size={10} color={colors.accent} style={styles.crownIcon} />
               )}
             </View>
           </TouchableOpacity>
@@ -187,10 +194,10 @@ export default function PoemCard({
           {poem.moods.slice(0, 2).map(mood => (
             <View
               key={mood}
-              style={[styles.moodTag, { backgroundColor: `${Colors.mood[mood]}30` }]}
+              style={[styles.moodTag, { backgroundColor: `${colors.mood[mood]}30` }]}
             >
-              <View style={[styles.moodDot, { backgroundColor: Colors.mood[mood] }]} />
-              <Text style={[styles.moodText, { color: Colors.mood[mood] }]}>
+              <View style={[styles.moodDot, { backgroundColor: colors.mood[mood] }]} />
+              <Text style={[styles.moodText, { color: colors.mood[mood] }]}>
                 {mood}
               </Text>
             </View>
@@ -203,7 +210,6 @@ export default function PoemCard({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: 20,
     marginHorizontal: 16,
@@ -229,34 +235,33 @@ const styles = StyleSheet.create({
   },
   poetName: {
     fontSize: 15,
-    fontWeight: '600',
-    color: Colors.primary,
+    fontWeight: '600' as const,
+  },
+  poetYears: {
+    fontSize: 12,
+    marginTop: 1,
   },
   countryText: {
     fontSize: 13,
-    color: Colors.textMuted,
   },
   content: {
     marginBottom: 20,
   },
   title: {
     fontSize: 22,
-    fontWeight: '600',
-    color: Colors.primary,
+    fontWeight: '600' as const,
     marginBottom: 16,
     letterSpacing: -0.3,
   },
   poemText: {
     fontSize: 16,
-    color: Colors.text,
     lineHeight: 28,
     letterSpacing: 0.2,
   },
   readMore: {
     fontSize: 14,
-    color: Colors.accent,
     marginTop: 12,
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   actions: {
     flexDirection: 'row',
@@ -264,7 +269,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
   },
   actionButton: {
     padding: 4,
@@ -301,7 +305,7 @@ const styles = StyleSheet.create({
   },
   moodText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '500' as const,
     textTransform: 'capitalize',
   },
 });

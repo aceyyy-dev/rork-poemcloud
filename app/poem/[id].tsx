@@ -259,6 +259,13 @@ export default function PoemDetailScreen() {
             activeOpacity={0.7}
           >
             <Text style={[styles.poetName, { color: colors.primary }]}>{poem.poet.name}</Text>
+            {poem.poet.birthYear && (
+              <Text style={[styles.poetYears, { color: colors.textMuted }]}>
+                {poem.poet.deathYear 
+                  ? `(${poem.poet.birthYear}–${poem.poet.deathYear})`
+                  : `(b. ${poem.poet.birthYear})`}
+              </Text>
+            )}
           </TouchableOpacity>
           <Text style={[styles.countryLabel, { color: colors.textMuted }]}>
             {poem.country}
@@ -666,6 +673,10 @@ const styles = StyleSheet.create({
   poetName: {
     fontSize: 18,
     fontWeight: '600',
+    marginBottom: 2,
+  },
+  poetYears: {
+    fontSize: 13,
     marginBottom: 4,
   },
   countryLabel: {

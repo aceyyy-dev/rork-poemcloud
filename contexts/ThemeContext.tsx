@@ -90,12 +90,19 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
   }, [themeId]);
 
   const isDark = useMemo(() => {
+    if (themeId === 'light') return false;
+    if (themeId === 'dark') return true;
+    if (themeId === 'system') return systemColorScheme === 'dark';
+    
+    const lightPremiumThemes: ThemeId[] = ['dawn-pages', 'still-paper', 'quiet-sky'];
+    if (lightPremiumThemes.includes(themeId)) {
+      return false;
+    }
+    
     if (isPremiumTheme) {
       return true;
     }
     
-    if (themeId === 'light') return false;
-    if (themeId === 'dark') return true;
     return systemColorScheme === 'dark';
   }, [themeId, isPremiumTheme, systemColorScheme]);
 
