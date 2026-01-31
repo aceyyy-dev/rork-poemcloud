@@ -56,6 +56,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     },
   });
 
+  const { mutateAsync: saveAuth } = saveAuthMutation;
+
   const signInWithEmail = useCallback(async (email: string, password: string) => {
     console.log('[Auth] Sign in with email:', email);
     const mockUser: AuthUser = {
@@ -66,9 +68,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       createdAt: new Date().toISOString(),
     };
     const token = `token_${Date.now()}`;
-    await saveAuthMutation.mutateAsync({ user: mockUser, token });
+    await saveAuth({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation]);
+  }, [saveAuth]);
 
   const signUpWithEmail = useCallback(async (email: string, password: string, name?: string) => {
     console.log('[Auth] Sign up with email:', email);
@@ -80,9 +82,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       createdAt: new Date().toISOString(),
     };
     const token = `token_${Date.now()}`;
-    await saveAuthMutation.mutateAsync({ user: mockUser, token });
+    await saveAuth({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation]);
+  }, [saveAuth]);
 
   const signInWithApple = useCallback(async () => {
     console.log('[Auth] Sign in with Apple');
@@ -94,9 +96,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       createdAt: new Date().toISOString(),
     };
     const token = `token_${Date.now()}`;
-    await saveAuthMutation.mutateAsync({ user: mockUser, token });
+    await saveAuth({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation]);
+  }, [saveAuth]);
 
   const signInWithGoogle = useCallback(async () => {
     console.log('[Auth] Sign in with Google');
@@ -108,9 +110,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       createdAt: new Date().toISOString(),
     };
     const token = `token_${Date.now()}`;
-    await saveAuthMutation.mutateAsync({ user: mockUser, token });
+    await saveAuth({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation]);
+  }, [saveAuth]);
 
   const signOut = useCallback(async () => {
     console.log('[Auth] Sign out');
@@ -142,16 +144,16 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       isPremium: false,
       createdAt: new Date().toISOString(),
     };
-    await saveAuthMutation.mutateAsync({ user: mockUser, token });
+    await saveAuth({ user: mockUser, token });
     return mockUser;
-  }, [saveAuthMutation, queryClient]);
+  }, [saveAuth, queryClient]);
 
   const updateUserPremiumStatus = useCallback(async (isPremium: boolean) => {
     if (!authState.user) return;
     const updatedUser = { ...authState.user, isPremium };
     const updatedState = { ...authState, user: updatedUser };
-    await saveAuthMutation.mutateAsync(updatedState);
-  }, [authState, saveAuthMutation]);
+    await saveAuth(updatedState);
+  }, [authState, saveAuth]);
 
   return {
     user: authState.user,

@@ -33,18 +33,32 @@ export default function CollectionDetailScreen() {
     );
   }
 
+  const hasImage = !!collection.coverImageUrl;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.heroContainer}>
-        <Image
-          source={{ uri: collection.coverImageUrl }}
-          style={styles.heroImage}
-        />
+        {hasImage ? (
+          <Image
+            source={{ uri: collection.coverImageUrl }}
+            style={styles.heroImage}
+          />
+        ) : (
+          <LinearGradient
+            colors={collection.coverGradient as [string, string]}
+            style={styles.heroImage}
+          />
+        )}
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.6)', colors.background]}
           locations={[0, 0.5, 1]}
           style={styles.heroGradient}
         />
+        {!hasImage && collection.coverIcon && (
+          <View style={styles.heroIconContainer}>
+            <Text style={styles.heroIcon}>{collection.coverIcon}</Text>
+          </View>
+        )}
       </View>
       
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -220,5 +234,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginTop: 40,
+  },
+  heroIconContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  heroIcon: {
+    fontSize: 64,
+    opacity: 0.8,
   },
 });

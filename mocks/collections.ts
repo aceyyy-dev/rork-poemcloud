@@ -101,7 +101,6 @@ export const collections: Collection[] = [
     id: 'morning',
     title: 'Quiet Morning Poems',
     description: 'Start the day gently',
-    coverImageUrl: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ahyvmtzdb2rgb90enwtcf',
     coverIcon: '🌅',
     coverGradient: ['#f6ad55', '#ed8936'] as const,
     poemIds: ['guest-house', 'wild-geese', 'hope-feathers', 'on-children'],
