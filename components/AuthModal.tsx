@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, User, Apple as AppleIcon, X, Scan, Fingerprint } from 'lucide-react-native';
+import { Mail, Lock, User, Apple as AppleIcon, X, Scan, Fingerprint, Cloud } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,6 +49,8 @@ export default function AuthModal({ visible, onClose, onSuccess, initialMode = '
   const [isLoading, setIsLoading] = useState(false);
   const [showBiometricEnableModal, setShowBiometricEnableModal] = useState(false);
   const [pendingAuthData, setPendingAuthData] = useState<{ userId: string; token: string } | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const syncOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     setMode(initialMode);
@@ -66,7 +69,30 @@ export default function AuthModal({ visible, onClose, onSuccess, initialMode = '
   const biometricName = getBiometricTypeName();
   const isFaceId = biometricType === 'face' && Platform.OS === 'ios';
 
-  const handleAuthSuccess = (userId: string, authToken: string) => {
+  const performAutoSync = async () => {
+    console.log('[AuthModal] Starting auto sync...');
+    setIsSyncing(true);
+    Animated.timing(syncOpacity, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    console.log('[AuthModal] Auto sync complete');
+    
+    Animated.timing(syncOpacity, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setIsSyncing(false);
+    });
+  };
+
+  const handleAuthSuccess = async (userId: string, authToken: string) => {
+    await performAutoSync();
+    
     if (shouldOfferBiometric) {
       setPendingAuthData({ userId, token: authToken });
       setShowBiometricEnableModal(true);
@@ -148,6 +174,7 @@ export default function AuthModal({ visible, onClose, onSuccess, initialMode = '
       if (result.success && result.userId && result.token) {
         await signInWithBiometric(result.userId, result.token);
         triggerHaptic('success');
+        await performAutoSync();
         onSuccess?.();
         onClose();
       } else {
@@ -169,11 +196,20 @@ export default function AuthModal({ visible, onClose, onSuccess, initialMode = '
             style={styles.gradient}
           />
 
+          {isSyncing && (
+            <Animated.View style={[styles.syncOverlay, { opacity: syncOpacity }]}>
+              <View style={[styles.syncBox, { backgroundColor: colors.surface }]}>
+                <Cloud size={28} color={colors.accent} strokeWidth={1.5} />
+                <Text style={[styles.syncText, { color: colors.primary }]}>Syncing...</Text>
+              </View>
+            </Animated.View>
+          )}
+
           <SafeAreaView style={styles.safeArea} edges={['top']}>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={onClose}
-              disabled={isLoading}
+              disabled={isLoading || isSyncing}
             >
               <X size={24} color={colors.text} strokeWidth={2} />
             </TouchableOpacity>
@@ -358,6 +394,29 @@ const styles = StyleSheet.create({
   },
   gradient: {
     ...StyleSheet.absoluteFillObject,
+  },
+  syncOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  syncBox: {
+    paddingVertical: 24,
+    paddingHorizontal: 40,
+    borderRadius: 16,
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  syncText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   safeArea: {
     flex: 1,

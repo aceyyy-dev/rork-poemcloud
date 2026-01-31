@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ImageBackground, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { useWallpaper } from '@/contexts/WallpaperContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -24,13 +24,12 @@ export default function AppBackground({ children }: AppBackgroundProps) {
   return (
     <View style={styles.container}>
       <View style={styles.wallpaperContainer} pointerEvents="none">
-        <ImageBackground
+        <Image
           source={{ uri: currentWallpaper.imageUrl }}
-          style={styles.wallpaper}
+          style={styles.wallpaperImage}
           resizeMode="cover"
-        >
-          <View style={[styles.overlay, { backgroundColor: overlayColor }]} />
-        </ImageBackground>
+        />
+        <View style={[styles.overlay, { backgroundColor: overlayColor }]} />
       </View>
       <View style={styles.content}>
         {children}
@@ -45,9 +44,12 @@ const styles = StyleSheet.create({
   },
   wallpaperContainer: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: -1,
   },
-  wallpaper: {
-    flex: 1,
+  wallpaperImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

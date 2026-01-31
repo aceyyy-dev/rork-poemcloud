@@ -26,17 +26,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { poems } from '@/mocks/poems';
 import PremiumModal from '@/components/PremiumModal';
 import AuthModal from '@/components/AuthModal';
-import DataSyncModal from '@/components/DataSyncModal';
+
 import { triggerHaptic } from '@/utils/haptics';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { colors, isIllustrated } = useTheme();
-  const { preferences, stats, setPremium, bookmarkCount } = useUser();
+  const { preferences, stats, setPremium } = useUser();
   const { isLoggedIn } = useAuth();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showSyncModal, setShowSyncModal] = useState(false);
+
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
 
   const likedPoems = poems.filter(p => preferences.likedPoemIds.includes(p.id));
@@ -324,24 +324,6 @@ export default function ProfileScreen() {
         visible={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         initialMode={authMode}
-        onSuccess={() => {
-          setShowSyncModal(true);
-        }}
-      />
-
-      <DataSyncModal
-        visible={showSyncModal}
-        onChoice={(choice) => {
-          console.log('[Profile] Data sync choice:', choice);
-          setShowSyncModal(false);
-        }}
-        onBack={() => {
-          setShowSyncModal(false);
-          setShowAuthModal(true);
-        }}
-        onCancel={() => setShowSyncModal(false)}
-        localBookmarkCount={bookmarkCount}
-        localLikeCount={preferences.likedPoemIds.length}
       />
     </View>
   );
