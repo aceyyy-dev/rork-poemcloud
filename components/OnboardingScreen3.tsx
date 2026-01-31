@@ -24,8 +24,8 @@ interface Props {
 const cards = [
   {
     icon: Headphones,
-    title: 'Hear poems the way they were meant to be heard',
-    subtitle: 'Native voice. Natural rhythm.',
+    title: 'Listen to poems read aloud',
+    subtitle: 'Professional text-to-speech narration.',
   },
   {
     icon: Languages,

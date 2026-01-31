@@ -23,6 +23,7 @@ import { poems } from '@/mocks/poems';
 import { countries } from '@/mocks/countries';
 import { Collection, Playlist } from '@/types';
 import PremiumModal from '@/components/PremiumModal';
+import FeaturePremiumModal, { FeatureType } from '@/components/FeaturePremiumModal';
 import CreatePlaylistModal from '@/components/CreatePlaylistModal';
 import { triggerHaptic } from '@/utils/haptics';
 
@@ -196,13 +197,16 @@ export default function CollectionsScreen() {
   const { playlists } = usePlaylists();
   const [activeTab, setActiveTab] = useState<Tab>('curated');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showFeatureModal, setShowFeatureModal] = useState(false);
+  const [featureType, setFeatureType] = useState<FeatureType>('curated');
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
 
   const savedPoems = poems.filter(p => preferences.bookmarkedPoemIds.includes(p.id));
 
   const handleCollectionPress = (collection: Collection) => {
     if (collection.isPremium && !preferences.isPremium) {
-      setShowPremiumModal(true);
+      setFeatureType('curated');
+      setShowFeatureModal(true);
     } else {
       router.push(`/collection/${collection.id}`);
     }
@@ -215,7 +219,8 @@ export default function CollectionsScreen() {
   const handleCreateCollection = () => {
     triggerHaptic('light');
     if (!preferences.isPremium) {
-      setShowPremiumModal(true);
+      setFeatureType('collection');
+      setShowFeatureModal(true);
       return;
     }
     setShowCreatePlaylistModal(true);
@@ -417,7 +422,11 @@ export default function CollectionsScreen() {
                   </View>
                   <TouchableOpacity
                     style={[styles.upgradeButton, { backgroundColor: colors.accent }]}
-                    onPress={() => { triggerHaptic('medium'); setShowPremiumModal(true); }}
+                    onPress={() => { 
+                      triggerHaptic('medium'); 
+                      setFeatureType('bookmark');
+                      setShowFeatureModal(true);
+                    }}
                   >
                     <Crown size={14} color={colors.textWhite} />
                     <Text style={[styles.upgradeText, { color: colors.textWhite }]}>Unlimited</Text>
@@ -476,7 +485,11 @@ export default function CollectionsScreen() {
                   </View>
                   <TouchableOpacity
                     style={[styles.unlockButton, { backgroundColor: colors.accent }]}
-                    onPress={() => { triggerHaptic('medium'); setShowPremiumModal(true); }}
+                    onPress={() => { 
+                      triggerHaptic('medium'); 
+                      setFeatureType('collection');
+                      setShowFeatureModal(true);
+                    }}
                   >
                     <Text style={[styles.unlockButtonText, { color: colors.textWhite }]}>
                       Unlock
@@ -526,6 +539,16 @@ export default function CollectionsScreen() {
           setShowPremiumModal(false);
         }}
         feature="Collections"
+      />
+
+      <FeaturePremiumModal
+        visible={showFeatureModal}
+        onClose={() => setShowFeatureModal(false)}
+        onUpgrade={() => {
+          setShowFeatureModal(false);
+          setShowPremiumModal(true);
+        }}
+        feature={featureType}
       />
 
       <CreatePlaylistModal

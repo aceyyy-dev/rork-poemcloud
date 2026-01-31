@@ -82,7 +82,7 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
   }, [isPremium, visible, showSuccessModal, onSubscribe, onClose]);
 
   const features = [
-    'Listen to poems with audio narrations',
+    'Listen with text-to-speech narration',
     'Side-by-side translations',
     'Unlimited bookmarks',
     'Offline reading',

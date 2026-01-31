@@ -36,6 +36,7 @@ import { getPoemById } from '@/mocks/poems';
 
 import PremiumModal from '@/components/PremiumModal';
 import ListenPremiumModal from '@/components/ListenPremiumModal';
+import FeaturePremiumModal from '@/components/FeaturePremiumModal';
 import * as Haptics from 'expo-haptics';
 import { useTTS } from '@/contexts/TTSContext';
 import PoemShareCard from '@/components/PoemShareCard';
@@ -53,12 +54,13 @@ export default function PoemDetailScreen() {
   const { isLiked, isBookmarked, toggleLike, toggleBookmark, markAsRead } = useUser();
   const { isPremium } = usePurchases();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [premiumFeature, setPremiumFeature] = useState<string>();
+  const [premiumFeature] = useState<string>();
   const [showTranslation, setShowTranslation] = useState(false);
   const [translatedText, setTranslatedText] = useState<string | null>(null);
   const [translationLanguage, setTranslationLanguage] = useState<string | null>(null);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [showListenModal, setShowListenModal] = useState(false);
+  const [showTranslateModal, setShowTranslateModal] = useState(false);
   const { toggleSpeech, isSpeakingPoem, stopSpeaking, progress, getRemainingTime, getElapsedTime, seekTo, hasActiveAudio, dismissPlayer, isCompleted, duration } = useTTS();
   const { enterProtectedScreen, exitProtectedScreen } = useScreenCapture();
   const [languageSearch, setLanguageSearch] = useState('');
@@ -136,16 +138,9 @@ export default function PoemDetailScreen() {
     setShowShareModal(true);
   };
 
-  const handlePremiumAction = (feature: string) => {
-    if (!isPremium) {
-      setPremiumFeature(feature);
-      setShowPremiumModal(true);
-    }
-  };
-
   const handleTranslate = () => {
     if (!isPremium) {
-      handlePremiumAction('Translations');
+      setShowTranslateModal(true);
       return;
     }
     setShowLanguagePicker(true);
@@ -447,6 +442,16 @@ export default function PoemDetailScreen() {
           setShowListenModal(false);
           setShowPremiumModal(true);
         }}
+      />
+
+      <FeaturePremiumModal
+        visible={showTranslateModal}
+        onClose={() => setShowTranslateModal(false)}
+        onUpgrade={() => {
+          setShowTranslateModal(false);
+          setShowPremiumModal(true);
+        }}
+        feature="translate"
       />
 
       <Modal

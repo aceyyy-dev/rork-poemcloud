@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Search, Heart, Bookmark, Share2, Headphones, Crown, Cloud, TrendingUp, Pause } from 'lucide-react-native';
+import { Search, Heart, Bookmark, Share2, Headphones, Crown, Cloud, TrendingUp, Pause, Languages } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
@@ -21,6 +21,7 @@ import { Poem, Mood } from '@/types';
 import Onboarding from '@/components/Onboarding';
 import PremiumModal from '@/components/PremiumModal';
 import ListenPremiumModal from '@/components/ListenPremiumModal';
+import FeaturePremiumModal from '@/components/FeaturePremiumModal';
 import PoemShareCard from '@/components/PoemShareCard';
 import * as Haptics from 'expo-haptics';
 
@@ -38,6 +39,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showListenModal, setShowListenModal] = useState(false);
+  const [showTranslateModal, setShowTranslateModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [todaysPoem, setTodaysPoem] = useState<Poem>(getTodaysPoem());
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -108,6 +110,14 @@ export default function HomeScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     toggleSpeech(todaysPoem.id, todaysPoem.text);
+  };
+
+  const handleTranslate = () => {
+    if (!isPremium) {
+      setShowTranslateModal(true);
+      return;
+    }
+    router.push(`/poem/${todaysPoem.id}`);
   };
 
   const isPlayingToday = isSpeakingPoem(todaysPoem.id);
@@ -220,6 +230,15 @@ export default function HomeScreen() {
                       )}
                     </View>
                   </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.heroAction}
+                    onPress={handleTranslate}
+                  >
+                    <View style={styles.premiumIcon}>
+                      <Languages size={22} color={isPremium ? colors.textLight : colors.accent} strokeWidth={1.5} />
+                      {!isPremium && <Crown size={10} color={colors.accent} style={styles.crownBadge} />}
+                    </View>
+                  </TouchableOpacity>
                 </View>
               </TouchableOpacity>
 
@@ -313,6 +332,16 @@ export default function HomeScreen() {
           setShowListenModal(false);
           setShowPremiumModal(true);
         }}
+      />
+
+      <FeaturePremiumModal
+        visible={showTranslateModal}
+        onClose={() => setShowTranslateModal(false)}
+        onUpgrade={() => {
+          setShowTranslateModal(false);
+          setShowPremiumModal(true);
+        }}
+        feature="translate"
       />
 
       <PoemShareCard

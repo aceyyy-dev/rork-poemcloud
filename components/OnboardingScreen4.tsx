@@ -55,7 +55,7 @@ export default function OnboardingScreen4({ onSubscribe, onSkip, onBack }: Props
   }, [fadeAnim, scaleAnim]);
 
   const features = [
-    'Audio narrations',
+    'Text-to-speech narration',
     'Side-by-side translations',
     'Unlimited bookmarks',
     'Offline reading',

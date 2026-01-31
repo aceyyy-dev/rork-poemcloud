@@ -8,20 +8,88 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import { Headphones, X } from 'lucide-react-native';
+import { 
+  X, 
+  Headphones, 
+  Languages, 
+  FolderPlus, 
+  BookMarked, 
+  Palette, 
+  Sparkles,
+  BookOpen,
+} from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { triggerHaptic } from '@/utils/haptics';
+
+export type FeatureType = 
+  | 'listen' 
+  | 'translate' 
+  | 'collection' 
+  | 'curated' 
+  | 'bookmark' 
+  | 'theme';
+
+interface FeatureConfig {
+  icon: React.ComponentType<any>;
+  title: string;
+  description: string;
+  buttonText: string;
+}
+
+const featureConfigs: Record<FeatureType, FeatureConfig> = {
+  listen: {
+    icon: Headphones,
+    title: 'Listen to Poems',
+    description: 'Enjoy poems read aloud with professional text-to-speech narration. Perfect for immersive reading.',
+    buttonText: 'Unlock Audio',
+  },
+  translate: {
+    icon: Languages,
+    title: 'Translate Poems',
+    description: 'Experience poetry in over 50 languages with AI-powered translations side-by-side.',
+    buttonText: 'Unlock Translations',
+  },
+  collection: {
+    icon: FolderPlus,
+    title: 'Create Collections',
+    description: 'Organize your favorite poems into custom collections with personalized covers and tags.',
+    buttonText: 'Unlock Collections',
+  },
+  curated: {
+    icon: BookOpen,
+    title: 'Curated Collections',
+    description: 'Access exclusive hand-picked collections curated by poetry experts around the world.',
+    buttonText: 'Unlock Curated',
+  },
+  bookmark: {
+    icon: BookMarked,
+    title: 'Unlimited Bookmarks',
+    description: 'You\'ve reached your free bookmark limit. Upgrade to save unlimited poems to your library.',
+    buttonText: 'Unlock Unlimited',
+  },
+  theme: {
+    icon: Palette,
+    title: 'Premium Themes',
+    description: 'Personalize your reading experience with beautiful color themes designed for poetry lovers.',
+    buttonText: 'Unlock Themes',
+  },
+};
 
 interface Props {
   visible: boolean;
   onClose: () => void;
   onUpgrade: () => void;
+  feature: FeatureType;
 }
 
-export default function ListenPremiumModal({ visible, onClose, onUpgrade }: Props) {
+export default function FeaturePremiumModal({ visible, onClose, onUpgrade, feature }: Props) {
   const { colors } = useTheme();
   const slideAnim = useRef(new Animated.Value(300)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const iconScale = useRef(new Animated.Value(0.5)).current;
+
+  const config = featureConfigs[feature];
+  const IconComponent = config.icon;
 
   useEffect(() => {
     if (visible) {
@@ -35,6 +103,12 @@ export default function ListenPremiumModal({ visible, onClose, onUpgrade }: Prop
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(iconScale, {
+          toValue: 1,
+          friction: 5,
+          tension: 100,
           useNativeDriver: true,
         }),
       ]).start();
@@ -51,17 +125,28 @@ export default function ListenPremiumModal({ visible, onClose, onUpgrade }: Prop
           useNativeDriver: true,
         }),
       ]).start();
+      iconScale.setValue(0.5);
     }
-  }, [visible]);
+  }, [visible, slideAnim, fadeAnim, iconScale]);
+
+  const handleUpgrade = () => {
+    triggerHaptic('medium');
+    onUpgrade();
+  };
+
+  const handleClose = () => {
+    triggerHaptic('light');
+    onClose();
+  };
 
   return (
     <Modal
       visible={visible}
       transparent
       animationType="none"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={styles.overlay} onPress={handleClose}>
         <Animated.View style={[styles.overlayBg, { opacity: fadeAnim }]} />
       </Pressable>
       
@@ -73,36 +158,48 @@ export default function ListenPremiumModal({ visible, onClose, onUpgrade }: Prop
       >
         <View style={[styles.handle, { backgroundColor: colors.border }]} />
         
-        <TouchableOpacity style={styles.closeButton} onPress={() => { triggerHaptic('light'); onClose(); }}>
+        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
           <X size={24} color={colors.textMuted} />
         </TouchableOpacity>
 
         <View style={styles.content}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.premiumLight }]}>
-            <Headphones size={28} color={colors.accent} strokeWidth={1.5} />
-          </View>
+          <Animated.View 
+            style={[
+              styles.iconContainer, 
+              { backgroundColor: colors.premiumLight, transform: [{ scale: iconScale }] }
+            ]}
+          >
+            <IconComponent size={32} color={colors.accent} strokeWidth={1.5} />
+          </Animated.View>
           
           <Text style={[styles.title, { color: colors.primary }]}>
-            Listen to Poems
+            {config.title}
           </Text>
           
           <Text style={[styles.description, { color: colors.textMuted }]}>
-            Enjoy poems read aloud with professional text-to-speech narration. Perfect for immersive reading.
+            {config.description}
           </Text>
+
+          <View style={[styles.premiumBadge, { backgroundColor: colors.accentLight }]}>
+            <Sparkles size={14} color={colors.accent} />
+            <Text style={[styles.premiumBadgeText, { color: colors.accent }]}>
+              PoemCloud+ Feature
+            </Text>
+          </View>
 
           <TouchableOpacity
             style={[styles.upgradeButton, { backgroundColor: colors.primary }]}
-            onPress={() => { triggerHaptic('medium'); onUpgrade(); }}
+            onPress={handleUpgrade}
             activeOpacity={0.8}
           >
             <Text style={[styles.upgradeButtonText, { color: colors.background }]}>
-              Start PoemCloud+
+              {config.buttonText}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.freeButton} 
-            onPress={onClose}
+            onPress={handleClose}
           >
             <Text style={[styles.freeButtonText, { color: colors.text }]}>
               Continue with Free
@@ -152,25 +249,39 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '600',
     marginBottom: 12,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   description: {
     fontSize: 16,
     lineHeight: 24,
     textAlign: 'center',
-    marginBottom: 28,
-    paddingHorizontal: 16,
+    marginBottom: 20,
+    paddingHorizontal: 12,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 24,
+  },
+  premiumBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   upgradeButton: {
     width: '100%',
