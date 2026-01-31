@@ -226,7 +226,13 @@ export default function PoemShareCard({ poem, visible, onClose }: Props) {
                   <Text style={[styles.poetNameCard, { color: cardColors.textMuted }]}>
                     — {poem.poet.name}
                   </Text>
-                  
+
+                  {(poem.poet.birthYear || poem.poet.deathYear) && (
+                    <Text style={[styles.poetYearsCard, { color: cardColors.textMuted }]}>
+                      {poem.poet.birthYear ?? '—'}–{poem.poet.deathYear ?? '—'}
+                    </Text>
+                  )}
+
                   <View style={styles.tagsRow}>
                     <View style={[styles.tag, { backgroundColor: `${cardColors.accent}30` }]}>
                       <Text style={[styles.tagText, { color: cardColors.accent }]}>{poem.country}</Text>
@@ -372,7 +378,12 @@ const styles = StyleSheet.create({
   },
   poetNameCard: {
     fontSize: 12,
+    marginBottom: 4,
+  },
+  poetYearsCard: {
+    fontSize: 11,
     marginBottom: 12,
+    opacity: 0.9,
   },
   tagsRow: {
     flexDirection: 'row',

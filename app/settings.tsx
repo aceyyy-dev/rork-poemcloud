@@ -19,7 +19,7 @@ import {
   Heart,
   Globe,
   Crown,
-  Image,
+
   HelpCircle,
   Info,
   ChevronRight,
@@ -36,7 +36,7 @@ import {
   Send,
 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useWallpaper, wallpapers, WallpaperId } from '@/contexts/WallpaperContext';
+
 import { useUser } from '@/contexts/UserContext';
 import { usePurchases } from '@/contexts/PurchasesContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -56,7 +56,7 @@ const MAX_MOODS = 6;
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors, themeId, setTheme, isDark, currentThemeName, isPremiumTheme } = useTheme();
-  const { wallpaperId, setWallpaper, currentWallpaper } = useWallpaper();
+
   const { preferences, updatePreferences } = useUser();
   const { isPremium, restorePurchases, isRestoring, manageSubscription, willRenew, expirationDate } = usePurchases();
   const { isLoggedIn, user, signOut, token } = useAuth();
@@ -74,7 +74,7 @@ export default function SettingsScreen() {
   const [showMoodsModal, setShowMoodsModal] = useState(false);
   const [showCountriesModal, setShowCountriesModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
-  const [showWallpaperModal, setShowWallpaperModal] = useState(false);
+
   const [selectedMoods, setSelectedMoods] = useState<Mood[]>(preferences.moods);
   const [selectedCountries, setSelectedCountries] = useState<string[]>(preferences.countries);
   const [isBiometricToggling, setIsBiometricToggling] = useState(false);
@@ -187,22 +187,7 @@ export default function SettingsScreen() {
     setTheme(newThemeId);
   };
 
-  const handleWallpaperSelect = (newWallpaperId: WallpaperId) => {
-    if (!isPremium) {
-      triggerHaptic('medium');
-      setShowWallpaperModal(false);
-      setTimeout(() => setShowPremiumModal(true), 300);
-      return;
-    }
-    
-    triggerHaptic('light');
-    setWallpaper(newWallpaperId);
-  };
 
-  const getWallpaperName = () => {
-    if (wallpaperId === 'none') return 'None';
-    return currentWallpaper?.name || 'None';
-  };
 
 
   return (
@@ -243,33 +228,7 @@ export default function SettingsScreen() {
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.settingRow}
-                onPress={() => { 
-                  triggerHaptic('light'); 
-                  if (!isPremium) {
-                    setShowPremiumModal(true);
-                  } else {
-                    setShowWallpaperModal(true);
-                  }
-                }}
-              >
-                <View style={styles.settingLeft}>
-                  <Image size={20} color={colors.textLight} strokeWidth={1.5} />
-                  <View style={styles.settingText}>
-                    <Text style={[styles.settingLabel, { color: colors.primary }]}>Background</Text>
-                    <Text style={[styles.settingValue, { color: colors.textMuted }]}>
-                      {getWallpaperName()}
-                      {wallpaperId !== 'none' && ' ✦'}
-                    </Text>
-                  </View>
-                </View>
-                {!isPremium ? (
-                  <Crown size={18} color={colors.accent} />
-                ) : (
-                  <ChevronRight size={20} color={colors.textMuted} />
-                )}
-              </TouchableOpacity>
+
             </View>
           </View>
 
@@ -808,99 +767,6 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
-      <Modal
-        visible={showWallpaperModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowWallpaperModal(false)}
-      >
-        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
-          <SafeAreaView style={styles.modalSafeArea} edges={['top', 'bottom']}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setShowWallpaperModal(false)}>
-                <X size={24} color={colors.primary} />
-              </TouchableOpacity>
-              <Text style={[styles.modalTitle, { color: colors.primary }]}>Background</Text>
-              <View style={{ width: 24 }} />
-            </View>
-
-            <ScrollView style={styles.themeScroll} showsVerticalScrollIndicator={false}>
-              <View style={styles.premiumThemesHeader}>
-                <Text style={[styles.themeSectionLabel, { color: colors.textMuted }]}>POEMCLOUD+ WALLPAPERS</Text>
-                <View style={[styles.premiumBadge, { backgroundColor: colors.accentLight }]}>
-                  <Crown size={12} color={colors.accent} />
-                  <Text style={[styles.premiumBadgeText, { color: colors.accent }]}>Premium</Text>
-                </View>
-              </View>
-              <Text style={[styles.wallpaperSubtitle, { color: colors.textMuted }]}>
-                Calm backgrounds designed for immersive reading
-              </Text>
-
-              <TouchableOpacity
-                style={[
-                  styles.wallpaperOption,
-                  { backgroundColor: colors.surface, borderColor: wallpaperId === 'none' ? colors.accent : colors.border },
-                  wallpaperId === 'none' && styles.wallpaperOptionSelected,
-                ]}
-                onPress={() => handleWallpaperSelect('none')}
-              >
-                <View style={[styles.wallpaperPreviewNone, { backgroundColor: colors.surfaceSecondary }]}>
-                  <Text style={[styles.wallpaperNoneText, { color: colors.textMuted }]}>None</Text>
-                </View>
-                <View style={styles.wallpaperInfo}>
-                  <Text style={[styles.wallpaperName, { color: colors.primary }]}>No Background</Text>
-                  <Text style={[styles.wallpaperDesc, { color: colors.textMuted }]}>Use solid theme colors</Text>
-                </View>
-                {wallpaperId === 'none' && <Check size={20} color={colors.accent} />}
-              </TouchableOpacity>
-
-              {wallpapers.map((wp) => {
-                const isSelected = wallpaperId === wp.id;
-                return (
-                  <TouchableOpacity
-                    key={wp.id}
-                    style={[
-                      styles.wallpaperOption,
-                      { backgroundColor: colors.surface, borderColor: isSelected ? colors.accent : colors.border },
-                      isSelected && styles.wallpaperOptionSelected,
-                    ]}
-                    onPress={() => handleWallpaperSelect(wp.id)}
-                  >
-                    <View style={styles.wallpaperPreviewContainer}>
-                      <View style={styles.wallpaperPreviewImage}>
-                        <View 
-                          style={[
-                            styles.wallpaperPreviewBg, 
-                            { backgroundColor: colors.surfaceSecondary }
-                          ]} 
-                        />
-                        {/* Using a colored placeholder since we can't load images in preview */}
-                        <View 
-                          style={[
-                            StyleSheet.absoluteFill, 
-                            { 
-                              backgroundColor: wp.id === 'morning-light' ? '#faf0e6' : 
-                                              wp.id === 'golden-dusk' ? '#e8a070' : '#4a5a7a',
-                              borderRadius: 8,
-                            }
-                          ]} 
-                        />
-                      </View>
-                    </View>
-                    <View style={styles.wallpaperInfo}>
-                      <Text style={[styles.wallpaperName, { color: colors.primary }]}>{wp.name}</Text>
-                      <Text style={[styles.wallpaperDesc, { color: colors.textMuted }]}>Illustrated wallpaper</Text>
-                    </View>
-                    {isSelected && <Check size={20} color={colors.accent} />}
-                  </TouchableOpacity>
-                );
-              })}
-
-              <View style={{ height: 40 }} />
-            </ScrollView>
-          </SafeAreaView>
-        </View>
-      </Modal>
 
       <Modal
         visible={showNotificationModal}

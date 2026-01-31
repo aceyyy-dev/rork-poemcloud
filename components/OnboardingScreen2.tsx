@@ -167,7 +167,7 @@ export default function OnboardingScreen2({ onNext, onBack }: Props) {
 
             <View style={styles.section}>
               <Text style={[styles.question, { color: colors.primary }]}>
-                Poetry you're drawn to
+                Poetry {"you're"} drawn to
               </Text>
               <Text style={[styles.subtitle, { color: colors.textMuted }]}>
                 Choose at least one — or explore them all

@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
 import { usePlaylists } from '@/contexts/PlaylistContext';
+import { usePurchases } from '@/contexts/PurchasesContext';
 import { collectionCategories } from '@/mocks/collections';
 import { poems } from '@/mocks/poems';
 import { countries } from '@/mocks/countries';
@@ -193,7 +194,8 @@ const AnimatedHorizontalList = React.memo(function AnimatedHorizontalList({
 export default function CollectionsScreen() {
   const router = useRouter();
   const { colors, isIllustrated } = useTheme();
-  const { preferences, setPremium, bookmarkCount, maxFreeBookmarks } = useUser();
+  const { preferences, bookmarkCount, maxFreeBookmarks } = useUser();
+  const { isPremium } = usePurchases();
   const { playlists } = usePlaylists();
   const [activeTab, setActiveTab] = useState<Tab>('curated');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -204,7 +206,7 @@ export default function CollectionsScreen() {
   const savedPoems = poems.filter(p => preferences.bookmarkedPoemIds.includes(p.id));
 
   const handleCollectionPress = (collection: Collection) => {
-    if (collection.isPremium && !preferences.isPremium) {
+    if (collection.isPremium && !isPremium) {
       setFeatureType('curated');
       setShowFeatureModal(true);
     } else {
@@ -218,7 +220,7 @@ export default function CollectionsScreen() {
 
   const handleCreateCollection = () => {
     triggerHaptic('light');
-    if (!preferences.isPremium) {
+    if (!isPremium) {
       setFeatureType('collection');
       setShowFeatureModal(true);
       return;
@@ -376,7 +378,7 @@ export default function CollectionsScreen() {
               >
                 Collections
               </Text>
-              {!preferences.isPremium && (
+              {!isPremium && (
                 <Crown
                   size={14}
                   color={activeTab === 'collections' ? colors.background : colors.accent}
@@ -404,7 +406,7 @@ export default function CollectionsScreen() {
                   <AnimatedHorizontalList
                   collections={category.collections}
                   onCollectionPress={handleCollectionPress}
-                  isPremium={preferences.isPremium}
+                  isPremium={isPremium}
                   colors={colors}
                 />
                 </View>
@@ -412,7 +414,7 @@ export default function CollectionsScreen() {
             </>
           ) : activeTab === 'saved' ? (
             <>
-              {!preferences.isPremium && (
+              {!isPremium && (
                 <View style={[styles.limitBanner, { backgroundColor: colors.premiumLight }]}>
                   <View style={styles.limitInfo}>
                     <Bookmark size={18} color={colors.accent} />
@@ -470,7 +472,7 @@ export default function CollectionsScreen() {
             </>
           ) : (
             <>
-              {!preferences.isPremium && (
+              {!isPremium && (
                 <View style={[styles.premiumBanner, { backgroundColor: colors.premiumLight }]}>
                   <View style={styles.premiumBannerContent}>
                     <Crown size={24} color={colors.accent} />
@@ -535,8 +537,12 @@ export default function CollectionsScreen() {
         visible={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
         onSubscribe={() => {
-          setPremium(true);
+          console.log('[Collections] Premium subscribed - opening Create Collection');
           setShowPremiumModal(false);
+          setTimeout(() => {
+            setShowCreatePlaylistModal(true);
+            setActiveTab('collections');
+          }, 250);
         }}
         feature="Collections"
       />

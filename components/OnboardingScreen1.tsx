@@ -161,7 +161,7 @@ export default function OnboardingScreen1({ onNext }: Props) {
 
             <Animated.View style={[styles.quoteContainer, { opacity: quoteFade }]}>
               <Text style={[styles.quote, { color: colors.textLight }]}>
-                "Poetry is the clear expression{'\n'}of mixed feelings."
+                {'"'}Poetry is the clear expression{`\n`}of mixed feelings.{"\""}
               </Text>
               <Text style={[styles.quoteAuthor, { color: colors.textMuted }]}>— W.H. Auden</Text>
             </Animated.View>
