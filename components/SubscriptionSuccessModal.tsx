@@ -45,18 +45,19 @@ export default function SubscriptionSuccessModal({ visible, onComplete }: Props)
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 220,
+          duration: 400,
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
           toValue: 1,
-          duration: 220,
+          duration: 400,
           useNativeDriver: true,
         }),
       ]).start(() => {
-        Animated.timing(checkScale, {
+        Animated.spring(checkScale, {
           toValue: 1,
-          duration: 200,
+          friction: 4,
+          tension: 50,
           useNativeDriver: true,
         }).start();
       });
@@ -69,12 +70,12 @@ export default function SubscriptionSuccessModal({ visible, onComplete }: Props)
         Animated.parallel([
           Animated.timing(fadeAnim, {
             toValue: 0,
-            duration: 280,
+            duration: 400,
             useNativeDriver: true,
           }),
           Animated.timing(scaleAnim, {
             toValue: 0.98,
-            duration: 280,
+            duration: 400,
             useNativeDriver: true,
           }),
         ]).start(() => {
@@ -82,7 +83,7 @@ export default function SubscriptionSuccessModal({ visible, onComplete }: Props)
           hapticFiredRef.current = false;
           onComplete();
         });
-      }, 1200);
+      }, 4000);
     }
 
     return () => {

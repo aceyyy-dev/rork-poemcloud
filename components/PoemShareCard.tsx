@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { X, Download, Check, Cloud } from 'lucide-react-native';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+
 import { useTheme } from '@/contexts/ThemeContext';
 import { Poem } from '@/types';
 
@@ -69,32 +69,31 @@ export default function PoemShareCard({ poem, visible, onClose }: Props) {
   const getCardColors = useCallback(() => {
     if (isDark) {
       return {
-        background: ['#1a2634', '#0d1721'] as const,
-        text: '#e8f1f8',
-        textMuted: '#8ba3b5',
-        accent: '#6ab0c9',
+        background: [colors.gradientStart || '#1a2634', colors.background || '#0d1721'] as const,
+        text: colors.primary || '#e8f1f8',
+        textMuted: colors.textMuted || '#8ba3b5',
+        accent: colors.accent || '#6ab0c9',
         watermark: 'rgba(255,255,255,0.15)',
         mood: colors.mood,
+        surface: colors.surface || '#1a2634',
       };
     }
     return {
-      background: ['#e8f4fc', '#cee5f2'] as const,
-      text: '#1a3a4a',
-      textMuted: '#5a7a8a',
-      accent: '#4a90a4',
+      background: [colors.gradientStart || '#e8f4fc', colors.background || '#cee5f2'] as const,
+      text: colors.primary || '#1a3a4a',
+      textMuted: colors.textMuted || '#5a7a8a',
+      accent: colors.accent || '#4a90a4',
       watermark: 'rgba(0,0,0,0.08)',
       mood: colors.mood,
+      surface: colors.surface || '#ffffff',
     };
-  }, [isDark, colors.mood]);
+  }, [isDark, colors]);
 
   const handleShare = async () => {
     if (!cardRef.current) return;
     
     setIsSharing(true);
     try {
-      const format = FORMATS[selectedFormat];
-      const scale = format.width / (SCREEN_WIDTH - 40);
-      
       const uri = await captureRef(cardRef, {
         format: 'png',
         quality: 1,

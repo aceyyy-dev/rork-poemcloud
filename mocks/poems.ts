@@ -589,10 +589,10 @@ Does my sassiness upset you?
 Why are you beset with gloom?
 \'Cause I walk like I\'ve got oil wells
 Pumping in my living room.`,
-    'langston-hughes',
+    'maya-angelou',
     ['hope', 'healing'],
     'English',
-    'A powerful anthem of resilience and dignity in the face of oppression.'
+    'Maya Angelou\'s powerful anthem of resilience and dignity in the face of oppression.'
   ),
   // CHINESE POEMS
   createPoem(
@@ -602,7 +602,7 @@ Pumping in my living room.`,
 I think that it is frost upon the ground.
 I raise my head and look at the bright moon,
 I lower my head and think of home.`,
-    'rumi',
+    'li-bai',
     ['melancholy', 'longing'],
     'Chinese',
     'One of the most famous Chinese poems, expressing homesickness.'
@@ -614,7 +614,7 @@ I lower my head and think of home.`,
 Spring in the city—grass and trees grow deep.
 Feeling the times, flowers draw tears;
 Hating separation, birds alarm the heart.`,
-    'rumi',
+    'du-fu',
     ['sad', 'melancholy'],
     'Chinese',
     'A reflection on war and the endurance of nature.'
@@ -631,7 +631,7 @@ But why can I not count them all?
 For one star, memory.
 For one star, love.
 For one star, loneliness.`,
-    'rumi',
+    'yun-dong-ju',
     ['melancholy', 'longing', 'hope'],
     'Korean',
     'A meditation on identity and hope under occupation.'
@@ -647,7 +647,7 @@ Speak, your life is still your own.
 
 Look how in the blacksmith\'s forge
 The flames leap high and the iron glows red.`,
-    'rumi',
+    'faiz-ahmed-faiz',
     ['hope', 'reflection'],
     'Urdu',
     'A call for freedom of expression during difficult times.'
@@ -659,7 +659,7 @@ The flames leap high and the iron glows red.`,
 Many were satisfied, yet many remain.
 We have known the pain of existence,
 Or else we would have departed long ago.`,
-    'rumi',
+    'mirza-ghalib',
     ['melancholy', 'reflection'],
     'Urdu',
     'A meditation on desire and the human condition.'
@@ -673,7 +673,7 @@ you must live with great seriousness
 like a squirrel, for example—
 I mean without looking for something beyond and above living,
 I mean living must be your whole occupation.`,
-    'rumi',
+    'nazim-hikmet',
     ['hope', 'reflection'],
     'Turkish',
     'An ode to embracing life fully.'
@@ -690,7 +690,7 @@ Don\'t forget those who seek peace.
 
 As you return home, your home, think of others.
 Don\'t forget those who live in tents.`,
-    'khalil-gibran',
+    'mahmoud-darwish',
     ['reflection', 'hope', 'sad'],
     'Arabic',
     'A call for empathy and awareness of others\' suffering.'
@@ -707,7 +707,7 @@ Other members uneasy will remain.
 
 If you have no sympathy for human pain,
 The name of human you cannot retain.`,
-    'hafez',
+    'saadi',
     ['hope', 'healing', 'reflection'],
     'Persian',
     'A poem about human unity and compassion.'
@@ -719,7 +719,7 @@ The name of human you cannot retain.`,
 Moves on: nor all thy Piety nor Wit
 Shall lure it back to cancel half a Line,
 Nor all thy Tears wash out a Word of it.`,
-    'hafez',
+    'khayyam',
     ['melancholy', 'reflection'],
     'Persian',
     'A meditation on fate and the irreversibility of time.'
