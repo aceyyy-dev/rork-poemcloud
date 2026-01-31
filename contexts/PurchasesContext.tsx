@@ -1,6 +1,6 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Platform, Alert, Linking } from 'react-native';
+import { Platform, Alert, Linking, InteractionManager } from 'react-native';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import Purchases, { 
   PurchasesPackage,
@@ -9,6 +9,12 @@ import Purchases, {
 } from 'react-native-purchases';
 
 const ENTITLEMENT_ID = 'premium';
+
+const customerInfoQueryKey = (configured: boolean) =>
+  ['customerInfo', configured] as const;
+
+const offeringsQueryKey = (configured: boolean) =>
+  ['offerings', configured] as const;
 
 type RevenueCatConfigureResult =
   | { ok: true; apiKey: string }
@@ -106,7 +112,7 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
   }, []);
 
   const customerInfoQuery = useQuery({
-    queryKey: ['customerInfo', isConfigured],
+    queryKey: customerInfoQueryKey(isConfigured),
     queryFn: async () => {
       if (!isConfigured) return null;
       try {
@@ -123,11 +129,12 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       }
     },
     enabled: isConfigured,
+    retry: 1,
     staleTime: 1000 * 60 * 5,
   });
 
   const offeringsQuery = useQuery({
-    queryKey: ['offerings', isConfigured],
+    queryKey: offeringsQueryKey(isConfigured),
     queryFn: async () => {
       if (!isConfigured) return null;
       try {
@@ -140,6 +147,7 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       }
     },
     enabled: isConfigured,
+    retry: 1,
     staleTime: 1000 * 60 * 10,
   });
 
@@ -154,7 +162,8 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       console.log('[RevenueCat] Purchase successful');
       console.log('[RevenueCat] Purchase result: success');
       console.log('[RevenueCat] isPremium after purchase:', isPremium);
-      queryClient.setQueryData(['customerInfo'], customerInfo);
+      queryClient.setQueryData(customerInfoQueryKey(true), customerInfo);
+      queryClient.invalidateQueries({ queryKey: ['customerInfo'] }).catch(() => {});
       setLastPurchaseResult('success');
       
       const now = Date.now();
@@ -168,11 +177,13 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       const anyErr = error as any;
       if (anyErr?.userCancelled) {
         console.log('[RevenueCat] Purchase result: cancelled');
+        onSuccessCallbackRef.current = null;
         setLastPurchaseResult('cancelled');
         return;
       }
       console.error('[RevenueCat] Purchase result: error');
       console.error('[RevenueCat] Purchase error:', formatRevenueCatError(error));
+      onSuccessCallbackRef.current = null;
       setLastPurchaseResult('error');
       Alert.alert('Purchase Failed', 'An error occurred during purchase. Please try again.');
     },
@@ -188,7 +199,8 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
       const isPremium = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
       console.log('[RevenueCat] Restore successful');
       console.log('[RevenueCat] isPremium after restore:', isPremium);
-      queryClient.setQueryData(['customerInfo'], customerInfo);
+      queryClient.setQueryData(customerInfoQueryKey(true), customerInfo);
+      queryClient.invalidateQueries({ queryKey: ['customerInfo'] }).catch(() => {});
       if (isPremium) {
         Alert.alert('Restored!', 'Your PoemCloud+ subscription has been restored.');
       } else {
@@ -213,7 +225,8 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
         console.log('[RevenueCat] Customer info updated via listener');
         console.log('[RevenueCat] isPremium changed:', oldIsPremium, '->', newIsPremium);
         previousPremiumRef.current = newIsPremium;
-        queryClient.setQueryData(['customerInfo'], info);
+        queryClient.setQueryData(customerInfoQueryKey(true), info);
+        queryClient.invalidateQueries({ queryKey: ['customerInfo'] }).catch(() => {});
       }
     };
 
@@ -280,12 +293,20 @@ export const [PurchasesProvider, usePurchases] = createContextHook(() => {
 
   const hideSuccessModal = useCallback(() => {
     setShowSuccessModal(false);
-    setTimeout(() => {
+
+    const run = () => {
       if (onSuccessCallbackRef.current) {
         onSuccessCallbackRef.current();
         onSuccessCallbackRef.current = null;
       }
-    }, 100);
+    };
+
+    try {
+      InteractionManager.runAfterInteractions(run);
+    } catch (e) {
+      console.log('[RevenueCat] InteractionManager.runAfterInteractions failed, falling back:', e);
+      setTimeout(run, 0);
+    }
   }, []);
 
   const setOnSuccessCallback = useCallback((callback: () => void) => {

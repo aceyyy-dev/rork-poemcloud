@@ -36,7 +36,6 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
     isRestoring,
     showSuccessModal,
     hideSuccessModal,
-    isPremium,
   } = usePurchases();
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
   const slideAnim = useRef(new Animated.Value(300)).current;
@@ -73,13 +72,6 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
     }
   }, [visible, slideAnim, fadeAnim]);
 
-  useEffect(() => {
-    if (isPremium && visible && !showSuccessModal) {
-      console.log('[PremiumModal] User became premium, closing modal');
-      onSubscribe();
-      onClose();
-    }
-  }, [isPremium, visible, showSuccessModal, onSubscribe, onClose]);
 
   const features = [
     'Listen with text-to-speech narration',
@@ -129,8 +121,10 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
   const handleSuccessComplete = () => {
     console.log('[PremiumModal] Success animation complete');
     hideSuccessModal();
-    onSubscribe();
-    onClose();
+    requestAnimationFrame(() => {
+      onSubscribe();
+      onClose();
+    });
   };
 
   const handleRestore = async () => {
