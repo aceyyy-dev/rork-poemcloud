@@ -36,6 +36,8 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
     isRestoring,
     showSuccessModal,
     hideSuccessModal,
+    setOnSuccessCallback,
+    isPremium,
   } = usePurchases();
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
   const slideAnim = useRef(new Animated.Value(300)).current;
@@ -97,13 +99,16 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
   const handleSubscribe = async () => {
     triggerHaptic('medium');
     if (!selectedPackage) {
-      console.log('[PremiumModal] No package available');
+      console.log('[PremiumModal] No package available, simulating success');
       onSubscribe();
       onClose();
       return;
     }
     try {
       console.log('[PremiumModal] Starting purchase...');
+      setOnSuccessCallback(() => {
+        console.log('[PremiumModal] Success callback triggered from PurchasesContext');
+      });
       const customerInfo = await purchasePackage(selectedPackage);
       console.log('[PremiumModal] Purchase flow completed, customerInfo:', customerInfo ? 'received' : 'null');
     } catch (error: any) {
@@ -118,12 +123,11 @@ export default function PremiumModal({ visible, onClose, onSubscribe, feature }:
   };
 
   const handleSuccessComplete = () => {
-    console.log('[PremiumModal] Success animation complete, closing modal');
+    console.log('[PremiumModal] Success animation complete, calling onSubscribe');
     hideSuccessModal();
-    setTimeout(() => {
-      onSubscribe();
-      onClose();
-    }, 100);
+    console.log('[PremiumModal] isPremium after purchase:', isPremium);
+    onSubscribe();
+    onClose();
   };
 
   const handleRestore = async () => {

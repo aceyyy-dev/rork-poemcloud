@@ -539,10 +539,13 @@ export default function CollectionsScreen() {
         onSubscribe={() => {
           console.log('[Collections] Premium subscribed - opening Create Collection');
           setShowPremiumModal(false);
-          setTimeout(() => {
-            setShowCreatePlaylistModal(true);
-            setActiveTab('collections');
-          }, 250);
+          setActiveTab('collections');
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              console.log('[Collections] Opening CreatePlaylistModal now');
+              setShowCreatePlaylistModal(true);
+            }, 300);
+          });
         }}
         feature="Collections"
       />

@@ -115,25 +115,40 @@ export default function AuthModal({ visible, onClose, onSuccess, initialMode = '
   };
 
   const handleEmailAuth = async () => {
+    console.log('[AuthModal] handleEmailAuth called, mode:', mode);
+    console.log('[AuthModal] email:', email, 'password length:', password.length);
+    
     if (!email || !password) {
+      console.log('[AuthModal] Validation failed - missing email or password');
       Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (mode === 'signup' && password.length < 6) {
+      console.log('[AuthModal] Validation failed - password too short');
+      Alert.alert('Error', 'Password must be at least 6 characters');
       return;
     }
 
     setIsLoading(true);
     try {
+      console.log('[AuthModal] Starting auth process...');
       let authUser;
       if (mode === 'signup') {
+        console.log('[AuthModal] Calling signUpWithEmail');
         authUser = await signUpWithEmail(email, password, name);
       } else {
+        console.log('[AuthModal] Calling signInWithEmail');
         authUser = await signInWithEmail(email, password);
       }
+      console.log('[AuthModal] Auth successful, user:', authUser.id);
       const authToken = `token_${Date.now()}`;
-      handleAuthSuccess(authUser.id, authToken);
+      await handleAuthSuccess(authUser.id, authToken);
       setEmail('');
       setPassword('');
       setName('');
     } catch (error: any) {
+      console.error('[AuthModal] Auth error:', error);
       Alert.alert('Error', error.message || 'Authentication failed');
     } finally {
       setIsLoading(false);
@@ -519,9 +534,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.03)',
+    backgroundColor: 'rgba(128,128,128,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(128,128,128,0.1)',
   },
   input: {
     flex: 1,
