@@ -29,9 +29,18 @@ const defaultStats: ReadingStats = {
 };
 
 export const [UserProvider, useUser] = createContextHook(() => {
+  // IMPORTANT: Hook order must remain stable - do not reorder or add conditional hooks
+  // 1. Context hooks
   const queryClient = useQueryClient();
-  const { isPremium: rcIsPremium } = usePurchases();
-  const { user: authUser, updateUserPremiumStatus } = useAuth();
+  const purchasesContext = usePurchases();
+  const authContext = useAuth();
+  
+  // Extract values after hooks to avoid issues
+  const rcIsPremium = purchasesContext?.isPremium;
+  const authUser = authContext?.user;
+  const updateUserPremiumStatus = authContext?.updateUserPremiumStatus;
+  
+  // 2. State hooks
   const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences);
   const [stats, setStats] = useState<ReadingStats>(defaultStats);
 

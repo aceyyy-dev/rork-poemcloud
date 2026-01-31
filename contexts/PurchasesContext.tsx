@@ -90,17 +90,29 @@ type PurchaseResult = 'success' | 'cancelled' | 'error' | null;
 const SUCCESS_DEBOUNCE_MS = 2000;
 
 export const [PurchasesProvider, usePurchases] = createContextHook(() => {
+  // IMPORTANT: Hook order must remain stable - do not reorder or add conditional hooks
+  // 1. Context hooks
   const queryClient = useQueryClient();
+  
+  // 2. State hooks (always in this order)
   const [isConfigured, setIsConfigured] = useState<boolean>(false);
   const [configureReason, setConfigureReason] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastPurchaseResult, setLastPurchaseResult] = useState<PurchaseResult>(null);
   const [localPremiumOverride, setLocalPremiumOverride] = useState<boolean | null>(null);
+  
+  // 3. Ref hooks (always in this order)
   const onSuccessCallbackRef = useRef<(() => void) | null>(null);
   const lastSuccessAtRef = useRef<number>(0);
   const previousPremiumRef = useRef<boolean | null>(null);
+  const configuredOnceRef = useRef<boolean>(false);
 
+  // 4. Effects (always in this order)
   useEffect(() => {
+    // Only configure once to prevent hook order issues on re-render
+    if (configuredOnceRef.current) return;
+    configuredOnceRef.current = true;
+    
     const result = configureRevenueCat();
     if (result.ok) {
       setIsConfigured(true);

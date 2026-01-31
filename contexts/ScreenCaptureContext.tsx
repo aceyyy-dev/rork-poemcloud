@@ -5,9 +5,16 @@ import * as ScreenCapture from 'expo-screen-capture';
 import { usePurchases } from './PurchasesContext';
 
 export const [ScreenCaptureProvider, useScreenCapture] = createContextHook(() => {
-  const { isPremium } = usePurchases();
+  // IMPORTANT: Hook order must remain stable - do not reorder or add conditional hooks
+  // 1. Context hooks
+  const purchasesContext = usePurchases();
+  const isPremium = purchasesContext?.isPremium ?? false;
+  
+  // 2. State hooks
   const [showCaptureOverlay, setShowCaptureOverlay] = useState(false);
   const [isProtectedScreen, setIsProtectedScreen] = useState(false);
+  
+  // 3. Ref hooks
   const overlayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
