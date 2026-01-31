@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { getCountryByCode } from '@/mocks/countries';
 import {
   Crown,
   BookOpen,
@@ -41,27 +42,68 @@ export default function ProfileScreen() {
   const likedPoems = poems.filter(p => preferences.likedPoemIds.includes(p.id));
   const readPoems = poems.filter(p => preferences.readPoemIds.includes(p.id));
 
-  const favoriteMoods = likedPoems.reduce((acc, poem) => {
-    poem.moods.forEach(mood => {
-      acc[mood] = (acc[mood] || 0) + 1;
+  const getTopMoods = () => {
+    const moodCounts: Record<string, number> = {};
+    const interactedPoemIds = [
+      ...preferences.readPoemIds,
+      ...preferences.likedPoemIds,
+      ...preferences.bookmarkedPoemIds,
+    ];
+
+    const uniquePoemIds = [...new Set(interactedPoemIds)];
+
+    uniquePoemIds.forEach((poemId) => {
+      const poem = poems.find((p) => p.id === poemId);
+      if (!poem) return;
+
+      const weight = preferences.likedPoemIds.includes(poemId)
+        ? 3
+        : preferences.bookmarkedPoemIds.includes(poemId)
+          ? 2
+          : 1;
+
+      poem.moods.forEach((mood) => {
+        moodCounts[mood] = (moodCounts[mood] || 0) + weight;
+      });
     });
-    return acc;
-  }, {} as Record<string, number>);
 
-  const topMoods = Object.entries(favoriteMoods)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3)
-    .map(([mood]) => mood);
+    return Object.entries(moodCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([mood], index) => ({ mood, rank: index + 1 }));
+  };
 
-  const favoriteCountries = likedPoems.reduce((acc, poem) => {
-    acc[poem.country] = (acc[poem.country] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const getTopRegions = () => {
+    const regionCounts: Record<string, number> = {};
+    const interactedPoemIds = [
+      ...preferences.readPoemIds,
+      ...preferences.likedPoemIds,
+      ...preferences.bookmarkedPoemIds,
+    ];
 
-  const topCountries = Object.entries(favoriteCountries)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3)
-    .map(([country]) => country);
+    const uniquePoemIds = [...new Set(interactedPoemIds)];
+
+    uniquePoemIds.forEach((poemId) => {
+      const poem = poems.find((p) => p.id === poemId);
+      if (!poem?.countryCode) return;
+
+      const weight = preferences.likedPoemIds.includes(poemId)
+        ? 3
+        : preferences.bookmarkedPoemIds.includes(poemId)
+          ? 2
+          : 1;
+
+      regionCounts[poem.countryCode] = (regionCounts[poem.countryCode] || 0) + weight;
+    });
+
+    return Object.entries(regionCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([code], index) => ({ code, rank: index + 1 }));
+  };
+
+  const topMoods = getTopMoods();
+  const topRegions = getTopRegions();
 
   return (
     <View style={[styles.container, { backgroundColor: isIllustrated ? 'transparent' : colors.background }]}>
@@ -175,38 +217,53 @@ export default function ProfileScreen() {
               <Text style={[styles.sectionTitle, { color: colors.primary }]}>About You</Text>
             </View>
             
-            <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
+            <View style={[styles.profileCard, { backgroundColor: colors.surface }]} testID="profileAboutYouCard">
               {topMoods.length > 0 ? (
                 <>
                   <View style={styles.profileRow}>
                     <Text style={[styles.profileLabel, { color: colors.textMuted }]}>Top moods</Text>
-                    <View style={styles.profileTags}>
-                      {topMoods.map(mood => (
-                        <View
-                          key={mood}
-                          style={[styles.moodTag, { backgroundColor: `${colors.mood[mood]}20` }]}
-                        >
-                          <View style={[styles.moodDot, { backgroundColor: colors.mood[mood] }]} />
-                          <Text style={[styles.moodText, { color: colors.mood[mood] }]}>
-                            {mood}
+                    <View style={styles.analyticsRow}>
+                      {topMoods.map((item) => (
+                        <View key={item.mood} style={styles.analyticsItem}>
+                          <Text style={[styles.analyticsRank, { color: colors.accent }]}>#{item.rank}</Text>
+                          <View style={[styles.analyticsMoodDot, { backgroundColor: colors.mood[item.mood as keyof typeof colors.mood] }]} />
+                          <Text style={[styles.analyticsText, { color: colors.textMuted }]}>
+                            {item.mood.charAt(0).toUpperCase() + item.mood.slice(1)}
                           </Text>
                         </View>
                       ))}
                     </View>
                   </View>
 
-                  {topCountries.length > 0 && (
-                    <View style={styles.profileRow}>
-                      <Text style={[styles.profileLabel, { color: colors.textMuted }]}>Favorite regions</Text>
-                      <Text style={[styles.profileValue, { color: colors.text }]}>{topCountries.join(', ')}</Text>
-                    </View>
-                  )}
+                  <View style={styles.profileRow}>
+                    <Text style={[styles.profileLabel, { color: colors.textMuted }]}>Favorite regions</Text>
+                    {topRegions.length > 0 ? (
+                      <View style={styles.analyticsRow}>
+                        {topRegions.map((item) => {
+                          const country = getCountryByCode(item.code);
+                          return (
+                            <View key={item.code} style={styles.analyticsItem}>
+                              <Text style={[styles.analyticsRank, { color: colors.accent }]}>#{item.rank}</Text>
+                              <Text style={styles.analyticsFlag}>{country?.flag ?? '🌍'}</Text>
+                              <Text style={[styles.analyticsText, { color: colors.textMuted }]}>
+                                {country?.name ?? item.code}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    ) : (
+                      <Text style={[styles.profileValue, { color: colors.textMuted }]}>Read poems to discover</Text>
+                    )}
+                  </View>
 
                   {preferences.isPremium && (
                     <View style={[styles.insightBox, { backgroundColor: colors.premiumLight }]}>
                       <Text style={[styles.insightText, { color: colors.primary }]}>
-                        You&apos;re drawn to {topMoods[0]} poetry
-                        {topCountries.length > 0 && ` from ${topCountries[0]}`}.
+                        You&apos;re drawn to {topMoods[0]?.mood}
+                        {topRegions[0]?.code
+                          ? ` poetry from ${getCountryByCode(topRegions[0].code)?.name ?? topRegions[0].code}`
+                          : ' poetry'}.
                       </Text>
                     </View>
                   )}
@@ -214,7 +271,7 @@ export default function ProfileScreen() {
               ) : (
                 <View style={styles.emptyProfile}>
                   <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    Like some poems to discover your poetry profile
+                    Like or bookmark poems to discover your poetry profile
                   </Text>
                 </View>
               )}
@@ -433,28 +490,38 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 8,
   },
-  profileTags: {
+  analyticsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
   },
-  moodTag: {
+  analyticsItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
-  moodDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  analyticsRank: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
-  moodText: {
+  analyticsMoodDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  analyticsText: {
     fontSize: 13,
-    fontWeight: '500',
-    textTransform: 'capitalize',
+    fontWeight: '600',
+  },
+  analyticsFlag: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.4,
   },
   profileValue: {
     fontSize: 15,

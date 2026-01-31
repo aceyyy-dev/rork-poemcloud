@@ -1,19 +1,23 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getCountryByCode } from '@/mocks/countries';
 import { getPoemsByCountry } from '@/mocks/poems';
 import { poets } from '@/mocks/poets';
+import { fetchCountryPoemsFromPoetryDb } from '@/utils/poetryDb';
+import type { Poem } from '@/types';
 
 export default function CountryDetailScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
@@ -21,8 +25,36 @@ export default function CountryDetailScreen() {
   const { colors } = useTheme();
 
   const country = getCountryByCode(code);
-  const poems = getPoemsByCountry(code);
+  const localPoems = getPoemsByCountry(code);
   const countryPoets = poets.filter(p => p.countryCode === code);
+
+  const countryPoemsQuery = useQuery({
+    queryKey: ['countryPoems', code],
+    queryFn: async () => {
+      console.log('[Country] Fetching PoetryDB poems for country:', code);
+      return fetchCountryPoemsFromPoetryDb({ countryCode: code });
+    },
+    enabled: Boolean(code),
+    staleTime: 1000 * 60 * 60 * 24,
+  });
+
+  const poems = useMemo<Poem[]>(() => {
+    const remote = countryPoemsQuery.data ?? [];
+
+    const seen = new Set<string>();
+    const merged: Poem[] = [];
+
+    const pushUnique = (p: Poem) => {
+      if (seen.has(p.id)) return;
+      seen.add(p.id);
+      merged.push(p);
+    };
+
+    localPoems.forEach(pushUnique);
+    remote.forEach(pushUnique);
+
+    return merged;
+  }, [countryPoemsQuery.data, localPoems]);
 
   if (!country) {
     return (
@@ -62,6 +94,15 @@ export default function CountryDetailScreen() {
           <Text style={[styles.countryStats, { color: colors.textMuted }]}>
             {countryPoets.length} poets • {poems.length} poems
           </Text>
+
+          {countryPoemsQuery.isLoading && (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator size="small" color={colors.textMuted} />
+              <Text style={[styles.loadingText, { color: colors.textMuted }]}>
+                Expanding the library for {country.name}…
+              </Text>
+            </View>
+          )}
 
           {countryPoets.length > 0 && (
             <View style={styles.section}>
@@ -176,6 +217,17 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 28,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 18,
+  },
+  loadingText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
   sectionTitle: {
     fontSize: 20,

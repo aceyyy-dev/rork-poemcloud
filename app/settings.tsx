@@ -34,7 +34,6 @@ import {
   Mail,
   Smartphone,
   Send,
-  
 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useWallpaper, wallpapers, WallpaperId } from '@/contexts/WallpaperContext';
@@ -48,7 +47,6 @@ import { premiumColorThemes, ThemeId } from '@/constants/colors';
 import PremiumModal from '@/components/PremiumModal';
 import FeaturePremiumModal from '@/components/FeaturePremiumModal';
 import { triggerHaptic } from '@/utils/haptics';
-import { poems } from '@/mocks/poems';
 import { useNotifications } from '@/contexts/NotificationContext';
 
 const MOODS: Mood[] = ['calm', 'sad', 'love', 'hope', 'melancholy', 'healing', 'longing', 'joy', 'reflection'];
@@ -206,65 +204,6 @@ export default function SettingsScreen() {
     return currentWallpaper?.name || 'None';
   };
 
-  const getTopMoods = () => {
-    const moodCounts: Record<string, number> = {};
-    const interactedPoemIds = [
-      ...preferences.readPoemIds,
-      ...preferences.likedPoemIds,
-      ...preferences.bookmarkedPoemIds,
-    ];
-    
-    const uniquePoemIds = [...new Set(interactedPoemIds)];
-    
-    uniquePoemIds.forEach(poemId => {
-      const poem = poems.find(p => p.id === poemId);
-      if (poem) {
-        const weight = preferences.likedPoemIds.includes(poemId) ? 3 : 
-                      preferences.bookmarkedPoemIds.includes(poemId) ? 2 : 1;
-        poem.moods.forEach(mood => {
-          moodCounts[mood] = (moodCounts[mood] || 0) + weight;
-        });
-      }
-    });
-    
-    return Object.entries(moodCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([mood], index) => ({ mood, rank: index + 1 }));
-  };
-
-  const getTopRegions = () => {
-    const regionCounts: Record<string, number> = {};
-    const interactedPoemIds = [
-      ...preferences.readPoemIds,
-      ...preferences.likedPoemIds,
-      ...preferences.bookmarkedPoemIds,
-    ];
-    
-    const uniquePoemIds = [...new Set(interactedPoemIds)];
-    
-    uniquePoemIds.forEach(poemId => {
-      const poem = poems.find(p => p.id === poemId);
-      if (poem && poem.countryCode) {
-        const weight = preferences.likedPoemIds.includes(poemId) ? 3 : 
-                      preferences.bookmarkedPoemIds.includes(poemId) ? 2 : 1;
-        regionCounts[poem.countryCode] = (regionCounts[poem.countryCode] || 0) + weight;
-      }
-    });
-    
-    return Object.entries(regionCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([code], index) => {
-        const country = countries.find(c => c.code === code);
-        return { code, name: country?.name || code, flag: country?.flag || '🌍', rank: index + 1 };
-      });
-  };
-
-  const topMoods = getTopMoods();
-  const topRegions = getTopRegions();
-
-  
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -399,58 +338,6 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>ABOUT YOU</Text>
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <View style={[styles.settingRow, { borderBottomColor: colors.borderLight }]}>
-                <View style={styles.settingLeft}>
-                  <Heart size={20} color={colors.accent} strokeWidth={1.5} />
-                  <View style={styles.settingText}>
-                    <Text style={[styles.settingLabel, { color: colors.primary }]}>Top Moods</Text>
-                    {topMoods.length > 0 ? (
-                      <View style={styles.analyticsRow}>
-                        {topMoods.map((item) => (
-                          <View key={item.mood} style={styles.analyticsItem}>
-                            <Text style={[styles.analyticsRank, { color: colors.accent }]}>#{item.rank}</Text>
-                            <View style={[styles.analyticsMoodDot, { backgroundColor: colors.mood[item.mood as keyof typeof colors.mood] }]} />
-                            <Text style={[styles.analyticsText, { color: colors.textMuted }]}>
-                              {item.mood.charAt(0).toUpperCase() + item.mood.slice(1)}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    ) : (
-                      <Text style={[styles.settingValue, { color: colors.textMuted }]}>Read poems to discover</Text>
-                    )}
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.settingRow}>
-                <View style={styles.settingLeft}>
-                  <Globe size={20} color={colors.accent} strokeWidth={1.5} />
-                  <View style={styles.settingText}>
-                    <Text style={[styles.settingLabel, { color: colors.primary }]}>Favorite Regions</Text>
-                    {topRegions.length > 0 ? (
-                      <View style={styles.analyticsRow}>
-                        {topRegions.map((item) => (
-                          <View key={item.code} style={styles.analyticsItem}>
-                            <Text style={[styles.analyticsRank, { color: colors.accent }]}>#{item.rank}</Text>
-                            <Text style={styles.analyticsFlag}>{item.flag}</Text>
-                            <Text style={[styles.analyticsText, { color: colors.textMuted }]}>
-                              {item.name}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    ) : (
-                      <Text style={[styles.settingValue, { color: colors.textMuted }]}>Read poems to discover</Text>
-                    )}
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
 
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>SUBSCRIPTION</Text>
