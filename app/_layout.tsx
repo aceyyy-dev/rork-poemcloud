@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import FogBackground from "@/components/FogBackground";
 import AppBackground from "@/components/AppBackground";
@@ -16,6 +16,7 @@ import { PlaylistProvider } from "@/contexts/PlaylistContext";
 import { ScreenCaptureProvider } from "@/contexts/ScreenCaptureContext";
 import { BiometricProvider } from "@/contexts/BiometricContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { trpc, trpcClient } from "@/lib/trpc";
 
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -140,31 +141,35 @@ export default function RootLayout() {
     });
   }, []);
 
+  const [trpcClientInstance] = useState(() => trpcClient);
+
   return (
-    <QueryClientProvider client={queryClient}>
+    <trpc.Provider client={trpcClientInstance} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider>
-          <WallpaperProvider>
-            <PurchasesProvider>
-              <AuthProvider>
-                <BiometricProvider>
-                  <UserProvider>
-                    <PlaylistProvider>
-                      <TTSProvider>
-                        <ScreenCaptureProvider>
-                          <NotificationProvider>
-                            <RootLayoutNav />
-                          </NotificationProvider>
-                        </ScreenCaptureProvider>
-                      </TTSProvider>
-                    </PlaylistProvider>
-                  </UserProvider>
-                </BiometricProvider>
-              </AuthProvider>
-            </PurchasesProvider>
-          </WallpaperProvider>
+            <WallpaperProvider>
+              <PurchasesProvider>
+                <AuthProvider>
+                  <BiometricProvider>
+                    <UserProvider>
+                      <PlaylistProvider>
+                        <TTSProvider>
+                          <ScreenCaptureProvider>
+                            <NotificationProvider>
+                              <RootLayoutNav />
+                            </NotificationProvider>
+                          </ScreenCaptureProvider>
+                        </TTSProvider>
+                      </PlaylistProvider>
+                    </UserProvider>
+                  </BiometricProvider>
+                </AuthProvider>
+              </PurchasesProvider>
+            </WallpaperProvider>
           </ThemeProvider>
         </GestureHandlerRootView>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
   );
 }
