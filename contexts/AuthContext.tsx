@@ -1,11 +1,15 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import * as WebBrowser from 'expo-web-browser';
+
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
-import { supabase } from '@/lib/supabase';
+import { supabase, getOAuthRedirectUrl } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const BIOMETRIC_TOKEN_KEY = 'poemcloud_biometric_token';
 const BIOMETRIC_USER_ID_KEY = 'poemcloud_biometric_user_id';
@@ -134,34 +138,146 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const signInWithApple = useCallback(async () => {
     console.log('[Auth] Sign in with Apple via Supabase');
     
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-    });
+    try {
+      const redirectUrl = getOAuthRedirectUrl();
+      console.log('[Auth] Apple OAuth redirect URL:', redirectUrl);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
 
-    if (error) {
-      console.error('[Auth] Apple sign in error:', error.message);
-      throw new Error(error.message);
+      if (error) {
+        console.error('[Auth] Apple sign in error:', error.message);
+        throw new Error(error.message);
+      }
+
+      if (!data.url) {
+        throw new Error('No OAuth URL returned');
+      }
+
+      console.log('[Auth] Opening Apple OAuth URL...');
+      
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        redirectUrl,
+        { showInRecents: true }
+      );
+
+      console.log('[Auth] Apple OAuth result type:', result.type);
+
+      if (result.type === 'success' && result.url) {
+        console.log('[Auth] Apple OAuth success, processing URL...');
+        const url = new URL(result.url);
+        const params = new URLSearchParams(url.hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+
+        if (accessToken) {
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+
+          if (sessionError) {
+            console.error('[Auth] Session error:', sessionError.message);
+            throw new Error(sessionError.message);
+          }
+
+          if (sessionData.user) {
+            console.log('[Auth] Apple sign in successful:', sessionData.user.id);
+            const authUser = mapSupabaseUser(sessionData.user, isPremiumLocal);
+            setUser(authUser);
+            return authUser;
+          }
+        }
+      }
+
+      if (result.type === 'cancel') {
+        throw new Error('Sign in was cancelled');
+      }
+
+      throw new Error('Apple sign in failed');
+    } catch (error: any) {
+      console.error('[Auth] Apple OAuth error:', error);
+      throw error;
     }
-
-    console.log('[Auth] Apple OAuth initiated');
-    return null as unknown as AuthUser;
-  }, []);
+  }, [isPremiumLocal]);
 
   const signInWithGoogle = useCallback(async () => {
     console.log('[Auth] Sign in with Google via Supabase');
     
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
+    try {
+      const redirectUrl = getOAuthRedirectUrl();
+      console.log('[Auth] Google OAuth redirect URL:', redirectUrl);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
 
-    if (error) {
-      console.error('[Auth] Google sign in error:', error.message);
-      throw new Error(error.message);
+      if (error) {
+        console.error('[Auth] Google sign in error:', error.message);
+        throw new Error(error.message);
+      }
+
+      if (!data.url) {
+        throw new Error('No OAuth URL returned');
+      }
+
+      console.log('[Auth] Opening Google OAuth URL...');
+      
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        redirectUrl,
+        { showInRecents: true }
+      );
+
+      console.log('[Auth] Google OAuth result type:', result.type);
+
+      if (result.type === 'success' && result.url) {
+        console.log('[Auth] Google OAuth success, processing URL...');
+        const url = new URL(result.url);
+        const params = new URLSearchParams(url.hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+
+        if (accessToken) {
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+
+          if (sessionError) {
+            console.error('[Auth] Session error:', sessionError.message);
+            throw new Error(sessionError.message);
+          }
+
+          if (sessionData.user) {
+            console.log('[Auth] Google sign in successful:', sessionData.user.id);
+            const authUser = mapSupabaseUser(sessionData.user, isPremiumLocal);
+            setUser(authUser);
+            return authUser;
+          }
+        }
+      }
+
+      if (result.type === 'cancel') {
+        throw new Error('Sign in was cancelled');
+      }
+
+      throw new Error('Google sign in failed');
+    } catch (error: any) {
+      console.error('[Auth] Google OAuth error:', error);
+      throw error;
     }
-
-    console.log('[Auth] Google OAuth initiated');
-    return null as unknown as AuthUser;
-  }, []);
+  }, [isPremiumLocal]);
 
   const signOut = useCallback(async () => {
     console.log('[Auth] Signing out from Supabase');
