@@ -4,12 +4,13 @@ import * as SecureStore from 'expo-secure-store';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
-import { trpcClient } from '@/lib/trpc';
+import { supabase } from '@/lib/supabase';
+import { Session, User } from '@supabase/supabase-js';
 
-const AUTH_STORAGE_KEY = 'poemcloud_auth';
 const BIOMETRIC_TOKEN_KEY = 'poemcloud_biometric_token';
 const BIOMETRIC_USER_ID_KEY = 'poemcloud_biometric_user_id';
 const BIOMETRIC_ENABLED_KEY = 'poemcloud_biometric_enabled';
+const PREMIUM_STATUS_KEY = 'poemcloud_premium_status';
 
 export interface AuthUser {
   id: string;
@@ -19,196 +20,199 @@ export interface AuthUser {
   createdAt: string;
 }
 
-interface AuthState {
-  user: AuthUser | null;
-  token: string | null;
+function mapSupabaseUser(user: User, isPremium: boolean = false): AuthUser {
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0],
+    isPremium,
+    createdAt: user.created_at,
+  };
 }
 
 export const [AuthProvider, useAuth] = createContextHook(() => {
   const queryClient = useQueryClient();
-  const [authState, setAuthState] = useState<AuthState>({ user: null, token: null });
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPremiumLocal, setIsPremiumLocal] = useState(false);
 
   useEffect(() => {
-    const loadAuth = async () => {
+    const loadPremiumStatus = async () => {
       try {
-        console.log('[Auth] Loading stored auth state...');
-        const stored = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-        if (stored) {
-          const parsed: AuthState = JSON.parse(stored);
-          console.log('[Auth] Found stored auth:', parsed.user?.id);
-          setAuthState(parsed);
-        } else {
-          console.log('[Auth] No stored auth found');
+        const stored = await AsyncStorage.getItem(PREMIUM_STATUS_KEY);
+        if (stored === 'true') {
+          setIsPremiumLocal(true);
         }
       } catch (error) {
-        console.error('[Auth] Error loading auth:', error);
-      } finally {
-        setIsLoading(false);
+        console.error('[Auth] Error loading premium status:', error);
       }
     };
-    loadAuth();
+    loadPremiumStatus();
   }, []);
 
-  const saveAuthState = useCallback(async (state: AuthState) => {
-    console.log('[Auth] Saving auth state:', state.user?.id);
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(state));
-    setAuthState(state);
-    queryClient.setQueryData(['auth'], state);
-  }, [queryClient]);
+  useEffect(() => {
+    console.log('[Auth] Setting up Supabase auth listener...');
+    
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log('[Auth] Initial session:', currentSession?.user?.id || 'none');
+      setSession(currentSession);
+      if (currentSession?.user) {
+        setUser(mapSupabaseUser(currentSession.user, isPremiumLocal));
+      }
+      setIsLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      console.log('[Auth] Auth state changed:', _event, newSession?.user?.id || 'none');
+      setSession(newSession);
+      if (newSession?.user) {
+        setUser(mapSupabaseUser(newSession.user, isPremiumLocal));
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [isPremiumLocal]);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
-    console.log('[Auth] Attempting sign in with email:', email);
-    try {
-      const result = await trpcClient.auth.login.mutate({ email, password });
-      console.log('[Auth] Sign in successful:', result.user.id);
-      
-      const authUser: AuthUser = {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        isPremium: result.user.isPremium,
-        createdAt: result.user.createdAt,
-      };
-      
-      await saveAuthState({ user: authUser, token: result.token });
-      return authUser;
-    } catch (error: any) {
-      console.error('[Auth] Sign in error:', error);
-      throw new Error(error.message || 'Invalid email or password');
+    console.log('[Auth] Attempting Supabase sign in with email:', email);
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase().trim(),
+      password,
+    });
+
+    if (error) {
+      console.error('[Auth] Sign in error:', error.message);
+      throw new Error(error.message);
     }
-  }, [saveAuthState]);
+
+    if (!data.user) {
+      throw new Error('Sign in failed');
+    }
+
+    console.log('[Auth] Sign in successful:', data.user.id);
+    const authUser = mapSupabaseUser(data.user, isPremiumLocal);
+    setUser(authUser);
+    return authUser;
+  }, [isPremiumLocal]);
 
   const signUpWithEmail = useCallback(async (email: string, password: string, name?: string) => {
-    console.log('[Auth] Attempting sign up with email:', email);
-    try {
-      const result = await trpcClient.auth.signup.mutate({ email, password, name });
-      console.log('[Auth] Sign up successful:', result.user.id);
-      
-      const authUser: AuthUser = {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        isPremium: result.user.isPremium,
-        createdAt: result.user.createdAt,
-      };
-      
-      await saveAuthState({ user: authUser, token: result.token });
-      return authUser;
-    } catch (error: any) {
-      console.error('[Auth] Sign up error:', error);
-      throw new Error(error.message || 'Failed to create account');
+    console.log('[Auth] Attempting Supabase sign up with email:', email);
+    
+    const { data, error } = await supabase.auth.signUp({
+      email: email.toLowerCase().trim(),
+      password,
+      options: {
+        data: {
+          name: name || email.split('@')[0],
+          full_name: name || email.split('@')[0],
+        },
+      },
+    });
+
+    if (error) {
+      console.error('[Auth] Sign up error:', error.message);
+      throw new Error(error.message);
     }
-  }, [saveAuthState]);
+
+    if (!data.user) {
+      throw new Error('Sign up failed');
+    }
+
+    console.log('[Auth] Sign up successful:', data.user.id);
+    const authUser = mapSupabaseUser(data.user, false);
+    setUser(authUser);
+    return authUser;
+  }, []);
 
   const signInWithApple = useCallback(async () => {
-    console.log('[Auth] Sign in with Apple (demo mode)');
-    const demoEmail = `apple_${Date.now()}@demo.poemcloud.app`;
-    try {
-      const result = await trpcClient.auth.signup.mutate({ 
-        email: demoEmail, 
-        password: 'apple_demo_password_secure',
-        name: 'Apple User'
-      });
-      
-      const authUser: AuthUser = {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        isPremium: result.user.isPremium,
-        createdAt: result.user.createdAt,
-      };
-      
-      await saveAuthState({ user: authUser, token: result.token });
-      return authUser;
-    } catch (error: any) {
-      console.error('[Auth] Apple sign in error:', error);
-      throw new Error('Apple sign in failed');
+    console.log('[Auth] Sign in with Apple via Supabase');
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+    });
+
+    if (error) {
+      console.error('[Auth] Apple sign in error:', error.message);
+      throw new Error(error.message);
     }
-  }, [saveAuthState]);
+
+    console.log('[Auth] Apple OAuth initiated');
+    return null as unknown as AuthUser;
+  }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    console.log('[Auth] Sign in with Google (demo mode)');
-    const demoEmail = `google_${Date.now()}@demo.poemcloud.app`;
-    try {
-      const result = await trpcClient.auth.signup.mutate({ 
-        email: demoEmail, 
-        password: 'google_demo_password_secure',
-        name: 'Google User'
-      });
-      
-      const authUser: AuthUser = {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        isPremium: result.user.isPremium,
-        createdAt: result.user.createdAt,
-      };
-      
-      await saveAuthState({ user: authUser, token: result.token });
-      return authUser;
-    } catch (error: any) {
-      console.error('[Auth] Google sign in error:', error);
-      throw new Error('Google sign in failed');
+    console.log('[Auth] Sign in with Google via Supabase');
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
+
+    if (error) {
+      console.error('[Auth] Google sign in error:', error.message);
+      throw new Error(error.message);
     }
-  }, [saveAuthState]);
+
+    console.log('[Auth] Google OAuth initiated');
+    return null as unknown as AuthUser;
+  }, []);
 
   const signOut = useCallback(async () => {
-    console.log('[Auth] Signing out');
-    await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+    console.log('[Auth] Signing out from Supabase');
+    
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error('[Auth] Sign out error:', error.message);
+    }
+
     if (Platform.OS !== 'web') {
       await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
       await SecureStore.deleteItemAsync(BIOMETRIC_USER_ID_KEY);
     }
     await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
-    setAuthState({ user: null, token: null });
+    
+    setUser(null);
+    setSession(null);
     queryClient.setQueryData(['auth'], { user: null, token: null });
   }, [queryClient]);
 
   const signInWithBiometric = useCallback(async (userId: string, token: string) => {
     console.log('[Auth] Sign in with biometric, userId:', userId);
-    const stored = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-    if (stored) {
-      const parsed: AuthState = JSON.parse(stored);
-      if (parsed.user && parsed.user.id === userId) {
-        setAuthState(parsed);
-        queryClient.setQueryData(['auth'], parsed);
-        return parsed.user;
-      }
+    
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    
+    if (currentSession?.user && currentSession.user.id === userId) {
+      const authUser = mapSupabaseUser(currentSession.user, isPremiumLocal);
+      setUser(authUser);
+      return authUser;
     }
-    const mockUser: AuthUser = {
-      id: userId,
-      email: 'biometric@user.com',
-      name: 'User',
-      isPremium: false,
-      createdAt: new Date().toISOString(),
-    };
-    await saveAuthState({ user: mockUser, token });
-    return mockUser;
-  }, [saveAuthState, queryClient]);
+    
+    console.log('[Auth] No matching Supabase session for biometric user');
+    throw new Error('Biometric session expired. Please sign in again.');
+  }, [isPremiumLocal]);
 
   const updateUserPremiumStatus = useCallback(async (isPremium: boolean) => {
-    if (!authState.user) return;
     console.log('[Auth] Updating premium status to:', isPremium);
     
-    try {
-      await trpcClient.auth.updatePremiumStatus.mutate({
-        userId: authState.user.id,
-        isPremium,
-      });
-    } catch {
-      console.log('[Auth] Backend premium update failed, updating locally');
-    }
+    setIsPremiumLocal(isPremium);
+    await AsyncStorage.setItem(PREMIUM_STATUS_KEY, isPremium ? 'true' : 'false');
     
-    const updatedUser = { ...authState.user, isPremium };
-    const updatedState = { ...authState, user: updatedUser };
-    await saveAuthState(updatedState);
-  }, [authState, saveAuthState]);
+    if (user) {
+      setUser({ ...user, isPremium });
+    }
+  }, [user]);
 
   return {
-    user: authState.user,
-    token: authState.token,
-    isLoggedIn: !!authState.user,
+    user,
+    token: session?.access_token || null,
+    isLoggedIn: !!user,
     isLoading,
     signInWithEmail,
     signUpWithEmail,
