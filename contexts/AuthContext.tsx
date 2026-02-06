@@ -2,6 +2,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import * as WebBrowser from 'expo-web-browser';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
@@ -136,73 +137,53 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, []);
 
   const signInWithApple = useCallback(async () => {
-    console.log('[Auth] Sign in with Apple via Supabase');
+    console.log('[Auth] Starting Apple NATIVE sign in...');
+    
+    if (Platform.OS === 'web') {
+      throw new Error('Apple Sign In is not available on web');
+    }
     
     try {
-      const redirectUrl = getOAuthRedirectUrl();
-      console.log('[Auth] Apple OAuth redirect URL:', redirectUrl);
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      console.log('[Auth] Requesting Apple credentials via native API...');
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      console.log('[Auth] Apple native credential received, user:', credential.user);
+
+      if (!credential.identityToken) {
+        console.error('[Auth] No identityToken in Apple credential');
+        throw new Error('No identity token returned from Apple');
+      }
+
+      console.log('[Auth] Signing in to Supabase with Apple ID token...');
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
-        options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: true,
-        },
+        token: credential.identityToken,
       });
 
       if (error) {
-        console.error('[Auth] Apple sign in error:', error.message);
+        console.error('[Auth] Supabase signInWithIdToken error:', error.message);
         throw new Error(error.message);
       }
 
-      if (!data.url) {
-        throw new Error('No OAuth URL returned');
+      if (!data.user) {
+        throw new Error('Apple sign in failed - no user returned');
       }
 
-      console.log('[Auth] Opening Apple OAuth URL...');
-      
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        redirectUrl,
-        { showInRecents: true }
-      );
-
-      console.log('[Auth] Apple OAuth result type:', result.type);
-
-      if (result.type === 'success' && result.url) {
-        console.log('[Auth] Apple OAuth success, processing URL...');
-        const url = new URL(result.url);
-        const params = new URLSearchParams(url.hash.substring(1));
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-
-        if (accessToken) {
-          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken || '',
-          });
-
-          if (sessionError) {
-            console.error('[Auth] Session error:', sessionError.message);
-            throw new Error(sessionError.message);
-          }
-
-          if (sessionData.user) {
-            console.log('[Auth] Apple sign in successful:', sessionData.user.id);
-            const authUser = mapSupabaseUser(sessionData.user, isPremiumLocal);
-            setUser(authUser);
-            return authUser;
-          }
-        }
-      }
-
-      if (result.type === 'cancel') {
+      console.log('[Auth] Apple NATIVE sign in successful:', data.user.id);
+      const authUser = mapSupabaseUser(data.user, isPremiumLocal);
+      setUser(authUser);
+      return authUser;
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        console.log('[Auth] Apple sign in was cancelled by user');
         throw new Error('Sign in was cancelled');
       }
-
-      throw new Error('Apple sign in failed');
-    } catch (error: any) {
-      console.error('[Auth] Apple OAuth error:', error);
+      console.error('[Auth] Apple NATIVE sign in error:', error);
       throw error;
     }
   }, [isPremiumLocal]);
